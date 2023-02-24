@@ -1,9 +1,10 @@
 $(() => {
-    $('[data-toggle="tooltip"]').tooltip();
+    $('[data-toggle="tooltip"]').tooltip(); // Initialize all tooltips
     $("#recalculate-btn").on("click", () => updateData(false));
-}); // Initialize all tooltips
+});
 
 function sendFoEMessage(type, data, callback) {
+    // Get the currently active tab and send our message to it.
     chrome.tabs.query({active: true, currentWindow: true}).then(tabs => {
         chrome.tabs.sendMessage(tabs[0].id, {target: "INJECTOR", type: type, data: data}, callback);
     });
@@ -23,7 +24,7 @@ function updateData(initial) {
         let row;
         let count = 0;
         for (let province of Object.values(map.provinces)) {
-            // Ignore provinces that aren't ours or that have to be filled.
+            // Ignore provinces that aren't ours or that don't have to be filled.
             if (!province.ours || province.slotCount === 0) continue;
 
             if (count % 2 === 0) {
@@ -49,13 +50,18 @@ function updateData(initial) {
 
         table.append(row);
 
-        console.log(map);
+        // Map every province to the amount of camps it has according to our distribution.
         let campCounts = Object.values(map.provinces)
             .filter(p => !p.isSpawnSpot && !p.ours)
             .map(p => ({p: p, c: p.neighborNames
                     .map(n => map.provinces[n].desiredCount)
                     .reduce((total, current) => total + current, 0)}));
 
+        /**
+         * Updates the over- or undershots
+         * @param type {string} Either 'overshot' or 'undershot'
+         * @param shots {[]} The actual overshots or undershots.
+         */
         function updateShots(type, shots) {
             $(`#${type}`).text(`${shots.length}`);
 
@@ -72,6 +78,11 @@ function updateData(initial) {
 }
 updateData(true);
 
+/**
+ * Joins an array into a string of the form '..., ..., ... and ...'.
+ * @param a {[]}
+ * @return {string} The resulting string
+ */
 function joinNicely(a) {
     let s = "";
     for (let i = 0; i < a.length; i++)
