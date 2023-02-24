@@ -1,6 +1,6 @@
 $(() => {
     $('[data-toggle="tooltip"]').tooltip(); // Initialize all tooltips
-    $("#recalculate-btn").on("click", () => updateData(false));
+    $("#redistribute-btn").on("click", () => updateData(false));
 });
 
 function sendFoEMessage(type, data, callback) {
