@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "GBG Camp Distributor",
+  "version": "0.1.0",
+  "description": "A small tool used to help distribute camps on Forge of Empires Guild Battlegrounds without wasting resources.",
+  "author": "PlanetTeamSpeak",
+  "icons": {
+    "16": "imgs/16-siege_camp.png",
+    "32": "imgs/32-siege_camp.png",
+    "48": "imgs/48-siege_camp.png",
+    "128": "imgs/128-siege_camp.png"
+  },
+
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "GBG Camp Distributor"
+  },
+  "host_permissions": [
+    "*://*.forgeofempires.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.forgeofempires.com/*"],
+      "js": ["js/web/injector.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["js/web/**"],
+      "matches": ["*://*.forgeofempires.com/*"]
+    }
+  ],
+  "background": {
+    "service_worker": "js/worker.js"
+  }
+}
