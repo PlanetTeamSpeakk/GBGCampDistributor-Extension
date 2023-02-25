@@ -46,7 +46,8 @@ const GBGCD = (function () {   // Detach from global scope
             case "REQUEST_GUILD":
                 return GBGCD.guild;
             case "PROCESS_MAP":
-                if (!data.initial) distributeCamps(GBGCD.map, campTarget); // Redistribute camps when the extension asks to recalculate.
+                if (!data.initial || data.campTarget !== campTarget)
+                    distributeCamps(GBGCD.map, data.campTarget); // Redistribute camps when the extension asks to recalculate.
                 return GBGCD.map ? GBGCD.map.stringify() : undefined;
             default:
                 console.error("[GBGCD] Received unknown message type from extension: " + type);
@@ -187,7 +188,7 @@ const GBGCD = (function () {   // Detach from global scope
         static time;
         /**
          * The parsed map, <code>null</code> until set.
-         * @type {?Object}
+         * @type {?GBGMap}
          */
         static map;
 

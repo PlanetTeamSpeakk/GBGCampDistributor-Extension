@@ -1,4 +1,5 @@
 const isPopup = window.location.search === "?popup";
+const campTarget = 4; // Might end up making this an option, who knows?
 
 $(() => {
     if (isPopup) $("html, body").css({margin: 0});
@@ -29,9 +30,8 @@ function sendFoEMessage(type, data, callback) {
     }));
 }
 
-const campTarget = 4;
 function updateData(initial) {
-    sendFoEMessage("PROCESS_MAP", {initial: initial}, mapString => {
+    sendFoEMessage("PROCESS_MAP", {initial: initial, campTarget: campTarget}, mapString => {
         if (!mapString) return; // Empty response
 
         /**
