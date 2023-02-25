@@ -1,4 +1,4 @@
-let GBGCD = (function () {   // Detach from global scope
+const GBGCD = (function () {   // Detach from global scope
     const campTarget = 4;
 
     FoEproxy.addHandler("TimeService", "updateTime", data => GBGCD.time = data.responseData.time);
