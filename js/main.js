@@ -5,7 +5,9 @@ $(() => {
     if (isPopup) $("html, body").css({margin: 0});
 
     $('[data-toggle="tooltip"]').tooltip(); // Initialize all tooltips
-    $("#redistribute-btn").on("click", () => updateData(false));
+    $("#redistribute-btn").on("click", () => requestUpdateData(false));
+    $("#clear-built-btn").on("click", () =>
+        sendFoEMessage("CLEAR_BUILT_CAMPS", {campTarget: campTarget}, updateData));
 
     let popoutBtn = $("#pop-out-btn");
     if (isPopup) popoutBtn.css({display: "none"})
@@ -30,76 +32,91 @@ function sendFoEMessage(type, data, callback) {
     }));
 }
 
-function updateData(initial) {
-    sendFoEMessage("PROCESS_MAP", {initial: initial, campTarget: campTarget}, mapString => {
-        if (!mapString) return; // Empty response
-
-        /**
-         * @type {{provinces: [{name: string, id: int, neighborNames: [string], ours: boolean, slotCount: number, desiredCount: number, isSpawnSpot: boolean}]}}
-         */
-        let map = JSON.parse(mapString);
-
-        let table = $("#provinces");
-        table.empty(); // Ensure it's empty when we start.
-
-        let row;
-        let count = 0;
-        for (let province of Object.values(map.provinces)) {
-            // Ignore provinces that aren't ours or that don't have to be filled.
-            if (!province.ours || province.slotCount === 0) continue;
-
-            if (count % 2 === 0) {
-                // Create a new row.
-                if (row) table.append(row);
-                row = $("<tr>");
-            }
-
-            row
-                .append($("<td>")
-                    .text(province.name))
-                .append($("<td>")
-                    .append($("<span>")
-                        .addClass(province.desiredCount < province.slotCount ? "saved" : "")
-                        .text(`${province.desiredCount}/${province.slotCount}`)));
-            count++;
-        }
-
-        if (count % 2 === 1)
-            // Add two empty cells
-            row.append($("<td>"))
-                .append($("<td>"))
-
-        table.append(row);
-
-        // Map every province to the amount of camps it has according to our distribution.
-        let campCounts = Object.values(map.provinces)
-            .filter(p => !p.isSpawnSpot && !p.ours)
-            .map(p => ({p: p, c: p.neighborNames
-                    .map(n => map.provinces[n].desiredCount)
-                    .reduce((total, current) => total + current, 0)}));
-
-        /**
-         * Updates the over- or undershots
-         * @param type {string} Either 'overshot' or 'undershot'
-         * @param shots {[]} The actual overshots or undershots.
-         */
-        function updateShots(type, shots) {
-            $(`#${type}`).text(`${shots.length}`);
-
-            bootstrap.Tooltip.getInstance(`#${type}-container`)
-                .setContent({".tooltip-inner": joinNicely(shots.map(p => `${p.p.name} (${p.c})`))}); // Update tooltip
-        }
-
-        let undershot = campCounts.filter(p => p.c < campTarget);
-        updateShots("undershot", undershot);
-
-        let overshot = campCounts.filter(p => p.c > campTarget);
-        updateShots("overshot", overshot);
-
-        sizeToFit();
-    });
+function requestUpdateData(initial) {
+    sendFoEMessage("PROCESS_MAP", {initial: initial, campTarget: campTarget}, updateData);
 }
-updateData(true);
+requestUpdateData(true);
+
+function updateData(resp) {
+    if (!resp) return; // Empty response
+
+    /**
+     * @type {{provinces: [{name: string, id: int, neighborNames: [string], ours: boolean, slotCount: number, desiredCount: number, isSpawnSpot: boolean}]}}
+     */
+    let map = JSON.parse(resp.map);
+
+    let table = $("#provinces");
+    table.empty(); // Ensure it's empty when we start.
+
+    let row;
+    let count = 0;
+    for (let province of Object.values(map.provinces)) {
+        // Ignore provinces that aren't ours or that don't have to be filled.
+        if (!province.ours || province.slotCount === 0) continue;
+
+        if (count % 2 === 0) {
+            // Create a new row.
+            if (row) table.append(row);
+            row = $("<tr>");
+        }
+
+        let campsColumn = $("<td>")
+            .append($("<span>")
+                .addClass(province.desiredCount < province.slotCount ? "saved" : "")
+                .text(`${province.desiredCount}/${province.slotCount}`));
+
+        if (province.id in resp.builtCamps) {
+            let built = resp.builtCamps[province.id];
+            campsColumn
+                .append(" ")
+                .append($("<span>")
+                    .addClass("built")
+                    .attr("data-toggle", "tooltip")
+                    .attr("title", `${built} camp${built === 1 ? "" : "s"} already built`)
+                    .text(`(${built})`));
+        }
+
+        row
+            .append($("<td>")
+                .text(province.name))
+            .append(campsColumn);
+        count++;
+    }
+
+    if (count % 2 === 1)
+        // Add two empty cells
+        row.append($("<td>")).append($("<td>"));
+
+    table.append(row);
+    $('[data-toggle="tooltip"]').tooltip(); // Update tooltips
+
+    // Map every province to the amount of camps it has according to our distribution.
+    let campCounts = Object.values(map.provinces)
+        .filter(p => !p.isSpawnSpot && !p.ours)
+        .map(p => ({p: p, c: p.neighborNames
+                .map(n => map.provinces[n].desiredCount)
+                .reduce((total, current) => total + current, 0)}));
+
+    /**
+     * Updates the over- or undershots
+     * @param type {string} Either 'overshot' or 'undershot'
+     * @param shots {[]} The actual overshots or undershots.
+     */
+    function updateShots(type, shots) {
+        $(`#${type}`).text(`${shots.length}`);
+
+        bootstrap.Tooltip.getInstance(`#${type}-container`)
+            .setContent({".tooltip-inner": joinNicely(shots.map(p => `${p.p.name} (${p.c})`))}); // Update tooltip
+    }
+
+    let undershot = campCounts.filter(p => p.c < campTarget);
+    updateShots("undershot", undershot);
+
+    let overshot = campCounts.filter(p => p.c > campTarget);
+    updateShots("overshot", overshot);
+
+    sizeToFit();
+}
 
 /**
  * Joins an array into a string of the form '..., ..., ... and ...'.

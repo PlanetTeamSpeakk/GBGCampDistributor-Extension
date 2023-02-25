@@ -1,5 +1,6 @@
 const GBGCD = (function () {   // Detach from global scope
     const campTarget = 4;
+    let builtCamps = {};
 
     FoEproxy.addHandler("TimeService", "updateTime", data => GBGCD.time = data.responseData.time);
 
@@ -18,8 +19,10 @@ const GBGCD = (function () {   // Detach from global scope
     });
 
     FoEproxy.addHandler("GuildBattlegroundBuildingService", "getBuildings", data => {
-        // TODO use this data
-        //{"responseData":{"placedBuildings":[{"id":"siege_camp","slotId":1,"readyAt":1677168715,"__class__":"GuildBattlegroundBuilding"},{"id":"siege_camp","readyAt":1677187595,"__class__":"GuildBattlegroundBuilding"}],"availableBuildings":[{"buildingId":"outpost","costs":{"resources":{"enhanced_porifera":194,"robots":226,"mars_microbes":80},"__class__":"Resources"},"__class__":"GuildBattlegroundBuildingCost"},{"buildingId":"fortress","costs":{"resources":{"dna_data":937,"plankton":76,"electromagnets":1987},"__class__":"Resources"},"__class__":"GuildBattlegroundBuildingCost"},{"buildingId":"decoys","costs":{"resources":{"enhanced_porifera":208,"nickel":55,"petroleum":237},"__class__":"Resources"},"__class__":"GuildBattlegroundBuildingCost"},{"buildingId":"traps","costs":{"resources":{"bio_creatures":1390,"bioplastics":1494,"steel":116},"__class__":"Resources"},"__class__":"GuildBattlegroundBuildingCost"},{"buildingId":"watchtower","costs":{"resources":{"bioplastics":159,"soy_proteins":52,"herbal_snack":289},"__class__":"Resources"},"__class__":"GuildBattlegroundBuildingCost"},{"buildingId":"siege_camp","costs":{"resources":{"ai_data":13,"tinplate":154,"compound_fluid":2833},"__class__":"Resources"},"__class__":"GuildBattlegroundBuildingCost"},{"buildingId":"banner","costs":{"resources":{"asbestos":166,"machineparts":5,"sugar_crystals":79},"__class__":"Resources"},"__class__":"GuildBattlegroundBuildingCost"},{"buildingId":"statue","costs":{"resources":{"processed_material":194,"explosives":47,"petroleum":1259},"__class__":"Resources"},"__class__":"GuildBattlegroundBuildingCost"},{"buildingId":"palace","costs":{"resources":{"soy_proteins":3622,"dna_data":4691,"paper":3687},"__class__":"Resources"},"__class__":"GuildBattlegroundBuildingCost"}],"provinceId":2,"__class__":"GuildBattlegroundProvinceBuildings"},"requestClass":"GuildBattlegroundBuildingService","requestMethod":"getBuildings","requestId":211,"__class__":"ServerResponse"}
+        let province = data.responseData.provinceId;
+        builtCamps[province] = data.responseData.placedBuildings
+            .filter(building => building.id === "siege_camp")
+            .length;
     });
 
     addEventListener("message", event => {
@@ -42,13 +45,19 @@ const GBGCD = (function () {   // Detach from global scope
      * @return {(undefined|{})} A possible response message, may also return nothing.
      */
     function onMessage(type, data) {
+        // noinspection FallThroughInSwitchStatementJS // This is intended
         switch (type) {
             case "REQUEST_GUILD":
                 return GBGCD.guild;
+            case "CLEAR_BUILT_CAMPS":
+                builtCamps = {};
             case "PROCESS_MAP":
                 if (!data.initial || data.campTarget !== campTarget)
                     distributeCamps(GBGCD.map, data.campTarget); // Redistribute camps when the extension asks to recalculate.
-                return GBGCD.map ? GBGCD.map.stringify() : undefined;
+                return {
+                    map: GBGCD.map ? GBGCD.map.stringify() : undefined,
+                    builtCamps: builtCamps
+                };
             default:
                 console.error("[GBGCD] Received unknown message type from extension: " + type);
                 break;
@@ -108,7 +117,7 @@ const GBGCD = (function () {   // Detach from global scope
      */
     function distributeCamps(map, campTarget) {
         for (let p of Object.values(map.provinces))
-            p.desiredCount = 0; // Reset map first
+            p.desiredCount = builtCamps[p.id] || 0; // Reset map first
 
         for (let p of Object.values(map.provinces).shuffle()) {
             if (p.ours || p.isSpawnSpot) continue;
