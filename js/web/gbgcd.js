@@ -1,15 +1,18 @@
 const GBGCD = (function () {   // Detach from global scope
-    const campTarget = 4;
+    let campTarget = 4;
     let builtCamps = {};
 
+    // Server time
     FoEproxy.addHandler("TimeService", "updateTime", data => GBGCD.time = data.responseData.time);
 
+    // Battleground
     FoEproxy.addHandler("GuildBattlegroundService", "getBattleground", data => {
         if (!GBGCD.guild) return; // Ensure we have our guild.
 
         GBGCD.map = parseBattlegrounds(data.responseData);
     });
 
+    // Guild data
     FoEproxy.addHandler("StartupService", "getData", data => {
         let userData = data["responseData"]["user_data"];
         GBGCD.guild = {
@@ -18,11 +21,36 @@ const GBGCD = (function () {   // Detach from global scope
         };
     });
 
+    // Built camps storage
     FoEproxy.addHandler("GuildBattlegroundBuildingService", "getBuildings", data => {
         let province = data.responseData.provinceId;
-        builtCamps[province] = data.responseData.placedBuildings
+        let built = data.responseData.placedBuildings
             .filter(building => building.id === "siege_camp")
             .length;
+
+        if (builtCamps[province] === built) return;
+        builtCamps[province] = built;
+
+        if (GBGCD.map) distributeCamps(GBGCD.map, campTarget);
+    });
+
+    // Province ownership changes (province conquered/lost)
+    FoEproxy.addWsHandler("GuildBattlegroundService", "getAction", data => {
+        if (!GBGCD.map) return;
+
+        let action = data.responseData.action;
+        let provinceId = data.responseData.provinceId;
+        GBGCD.map.provinces[GBGCD.map.idToName(provinceId)].ours = action === "province_conquered";
+
+        distributeCamps(GBGCD.map, campTarget);
+        GBGCD.postInjectorMessage({
+            target: "POPUP", // If no popup is open, this message will be ignored.
+            type: "PROVINCE_OWNERSHIP_CHANGE",
+            data: {
+                map: GBGCD.map ? GBGCD.map.stringify() : undefined,
+                builtCamps: builtCamps
+            }
+        });
     });
 
     addEventListener("message", event => {
@@ -52,8 +80,10 @@ const GBGCD = (function () {   // Detach from global scope
             case "CLEAR_BUILT_CAMPS":
                 builtCamps = {};
             case "PROCESS_MAP":
-                if (!data.initial || data.campTarget !== campTarget)
-                    distributeCamps(GBGCD.map, data.campTarget); // Redistribute camps when the extension asks to recalculate.
+                if (!data.initial || data.campTarget !== campTarget) {
+                    campTarget = data.campTarget;
+                    distributeCamps(GBGCD.map, campTarget); // Redistribute camps when the extension asks to recalculate.
+                }
                 return {
                     map: GBGCD.map ? GBGCD.map.stringify() : undefined,
                     builtCamps: builtCamps

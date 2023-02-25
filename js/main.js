@@ -18,6 +18,20 @@ $(() => {
     })
 });
 
+chrome.runtime.onMessage.addListener(message => {
+    if (message.target !== "POPUP") return;
+
+    switch (message.type) {
+        // If a province's owner is changed, the camps are redistributed.
+        // We reflect that change here too (if a popup is open while it happens)
+        case "PROVINCE_OWNERSHIP_CHANGE":
+            updateData(message.data);
+            break;
+        default:
+            console.error("Received invalid message from extension: " + message.type);
+    }
+});
+
 function sizeToFit() {
     let content = document.getElementById("content");
     let width = content.offsetWidth + 50;
