@@ -107,7 +107,7 @@ let GBGCD = (function () {   // Detach from global scope
             p.desiredCount = 0; // Reset map first
 
         for (let p of Object.values(map.provinces).shuffle()) {
-            if (p.ours) continue;
+            if (p.ours || p.isSpawnSpot) continue;
 
             let ours = Array.from(p.neighbors).filter(n => n.ours);
             let totalCC = ours
