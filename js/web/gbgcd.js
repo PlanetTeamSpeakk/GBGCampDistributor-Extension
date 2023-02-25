@@ -28,14 +28,10 @@ const GBGCD = (function () {   // Detach from global scope
         let resp = onMessage(event.data.type, event.data.data);
         if (!resp) return;
 
-        let [type, data] = resp;
-
         // Send response
-        if (!type) return;
         GBGCD.postInjectorMessage({
             id: event.data.id,
-            type: type,
-            data: data
+            data: resp
         });
     });
 
@@ -43,15 +39,15 @@ const GBGCD = (function () {   // Detach from global scope
      * Used to process messages.
      * @param type {string} The type of the message
      * @param data {object} The data associated with the message
-     * @return {(string|*|{})[]} A possible response message, may also return nothing.
+     * @return {(undefined|{})} A possible response message, may also return nothing.
      */
     function onMessage(type, data) {
         switch (type) {
             case "REQUEST_GUILD":
-                return ["TEST_MESSAGE_RESP", GBGCD.guild];
+                return GBGCD.guild;
             case "PROCESS_MAP":
                 if (!data.initial) distributeCamps(GBGCD.map, campTarget); // Redistribute camps when the extension asks to recalculate.
-                return ["MAP", GBGCD.map ? GBGCD.map.stringify() : undefined];
+                return GBGCD.map ? GBGCD.map.stringify() : undefined;
             default:
                 console.error("[GBGCD] Received unknown message type from extension: " + type);
                 break;
