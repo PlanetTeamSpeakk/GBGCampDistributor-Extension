@@ -23,7 +23,7 @@ const GBGCD = (function () {   // Detach from global scope
 
     // Built camps storage
     FoEproxy.addHandler("GuildBattlegroundBuildingService", "getBuildings", data => {
-        let province = data.responseData.provinceId;
+        let province = data.responseData.provinceId || 0;
         let built = data.responseData.placedBuildings
             .filter(building => building.id === "siege_camp")
             .length;
@@ -39,7 +39,7 @@ const GBGCD = (function () {   // Detach from global scope
         if (!GBGCD.map) return;
 
         let action = data.responseData.action;
-        let provinceId = data.responseData.provinceId;
+        let provinceId = data.responseData.provinceId || 0;
         GBGCD.map.provinces[GBGCD.map.idToName(provinceId)].ours = action === "province_conquered";
 
         distributeCamps(GBGCD.map, campTarget);
