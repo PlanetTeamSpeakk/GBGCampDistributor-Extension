@@ -1,4 +1,12 @@
 class GBGMap {
+    constructor() {
+        /**
+         * The provinces in this map.
+         * @type {{string: Province}}
+         */
+        this.provinces = {};
+    }
+
     /**
      * Stringifies this map to JSON. Ignores circular properties and converts sets to arrays
      * to ensure proper serialization.

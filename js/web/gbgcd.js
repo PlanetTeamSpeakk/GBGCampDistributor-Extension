@@ -10,7 +10,6 @@ let GBGCD = (function () {   // Detach from global scope
     });
 
     FoEproxy.addHandler("StartupService", "getData", data => {
-        console.log("Startup data:", data);
         let userData = data["responseData"]["user_data"];
         GBGCD.guild = {
             name: userData["clan_name"],
@@ -102,6 +101,14 @@ let GBGCD = (function () {   // Detach from global scope
         return map;
     }
 
+    /**
+     * Distributes camps across the entire map ensuring that every
+     * opposing province has at least the given amount of camps
+     * surrounding it if possible.
+     * @param map {GBGMap} The map to distribute camps on
+     * @param campTarget {number} The amount of camps each province
+     * should be supported by.
+     */
     function distributeCamps(map, campTarget) {
         for (let p of Object.values(map.provinces))
             p.desiredCount = 0; // Reset map first
