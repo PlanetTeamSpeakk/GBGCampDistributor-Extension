@@ -1,18 +1,39 @@
+const isPopup = window.location.search === "?popup";
+
 $(() => {
+    if (isPopup) $("html, body").css({margin: 0});
+
     $('[data-toggle="tooltip"]').tooltip(); // Initialize all tooltips
     $("#redistribute-btn").on("click", () => updateData(false));
+
+    let popoutBtn = $("#pop-out-btn");
+    if (isPopup) popoutBtn.css({display: "none"})
+    else popoutBtn.on("click", () => {
+        window.open(chrome.runtime.getURL("index.html?popup"),
+            "_blank", "popup,width=400,height=620");
+        window.close();
+    })
 });
+
+function sizeToFit() {
+    let content = document.getElementById("content");
+    let width = content.offsetWidth + 50;
+    let height = content.offsetHeight + 60;
+    window.resizeTo(width, height);
+}
 
 function sendFoEMessage(type, data, callback) {
     // Get the currently active tab and send our message to it.
-    chrome.tabs.query({active: true, currentWindow: true}).then(tabs => {
-        chrome.tabs.sendMessage(tabs[0].id, {target: "INJECTOR", type: type, data: data}, callback);
-    });
+    chrome.tabs.query({active: true}).then(tabs => tabs.forEach(tab => {
+        chrome.tabs.sendMessage(tab.id, {target: "INJECTOR", type: type, data: data}, callback);
+    }));
 }
 
 const campTarget = 4;
 function updateData(initial) {
     sendFoEMessage("PROCESS_MAP", {initial: initial}, mapString => {
+        if (!mapString) return; // Empty response
+
         /**
          * @type {{provinces: [{name: string, id: int, neighborNames: [string], ours: boolean, slotCount: number, desiredCount: number, isSpawnSpot: boolean}]}}
          */
@@ -74,6 +95,8 @@ function updateData(initial) {
 
         let overshot = campCounts.filter(p => p.c > campTarget);
         updateShots("overshot", overshot);
+
+        sizeToFit();
     });
 }
 updateData(true);
