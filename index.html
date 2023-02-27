@@ -15,7 +15,9 @@
 </head>
 <body>
     <div id="content" class="container mt-3" style="width: 350px;">
-        <div id="pop-out-btn" data-toggle="tooltip" title="Pop Out"></div>
+        <a id="settings-btn" class="icon-btn" tabindex="0" role="button" data-bs-toggle="popover" data-bs-content="Settings page"></a>
+        <div id="pop-out-btn" class="icon-btn" data-bs-toggle="tooltip" title="Pop Out"></div>
+
         <h2 class="text-center">GBG Camp Distributor</h2>
         <p class="text-center mb-1">Camps to build:</p>
         <table class="table table-bordered w-auto mx-auto mb-1">
@@ -34,11 +36,11 @@
             <div class="row">
                 <!--Empty column-->
                 <div class="col m-1 p-0 text-center">
-                    <p id="overshot-container" class="m-0" data-toggle="tooltip" title="Overshot">Overshot: <span id="overshot">0</span></p>
+                    <p id="overshot-container" class="m-0" data-bs-toggle="tooltip" title="Overshot">Overshot: <span id="overshot">0</span></p>
                 </div>
 
                 <div class="col m-1 p-0 text-center">
-                    <p id="undershot-container" class="m-0" data-toggle="tooltip" title="Undershot">Undershot: <span id="undershot">0</span></p>
+                    <p id="undershot-container" class="m-0" data-bs-toggle="tooltip" title="Undershot">Undershot: <span id="undershot">0</span></p>
                 </div>
             </div>
         </div>
@@ -50,7 +52,7 @@
                 </div>
 
                 <div class="col p-1 d-flex align-items-center justify-content-center text-center">
-                    <button id="clear-built-btn" type="button" class="btn btn-danger mx-auto" data-toggle="tooltip"
+                    <button id="clear-built-btn" type="button" class="btn btn-danger mx-auto" data-bs-toggle="tooltip"
                         title="Forget about the camps already built for every province.">Clear built camps</button>
                 </div>
             </div>

@@ -1,10 +1,24 @@
 const isPopup = window.location.search === "?popup";
+const settings = {
+    "show-filled": getSetting("show-filled", v => v === "true") ?? true,
+    "camp-target": getSetting("camp-target", parseInt) ?? 4
+};
 const campTarget = 4; // Might end up making this an option, who knows?
+let lastResp;
 
 $(() => {
     if (isPopup) $("html, body").css({margin: 0});
 
-    $('[data-toggle="tooltip"]').tooltip(); // Initialize all tooltips
+    let settingsBtn = $("#settings-btn");
+    bootstrap.Popover.getOrCreateInstance(settingsBtn, {html: true}).setContent({
+        ".popover-body": createSettingsPage()
+    });
+
+    // Ensure tooltips work in the settings popover
+    settingsBtn.on("shown.bs.popover", () => $('[data-bs-toggle="tooltip"]').tooltip());
+
+    $('[data-bs-toggle="tooltip"]').tooltip(); // Initialize all tooltips
+
     $("#redistribute-btn").on("click", () => requestUpdateData(false));
     $("#clear-built-btn").on("click", () =>
         sendFoEMessage("CLEAR_BUILT_CAMPS", {campTarget: campTarget}, updateData));
@@ -32,11 +46,60 @@ chrome.runtime.onMessage.addListener(message => {
     }
 });
 
+function createSettingsPage() {
+    return $(`<div id="settings-page" class="vstack gap-2 form-check">`)
+        .append($(`<div>`)
+            .append($(`<input id="show-filled" class="form-check-input" type="checkbox">`)
+                .prop("checked", settings["show-filled"])
+                .on("change", function () {
+                    setSetting("show-filled", this.checked);
+                    resetData();
+                }))
+            .append($(`
+              <label class="form-check-label" for="show-filled" data-bs-toggle="tooltip"
+                title="Whether to show provinces that already have the desired amount of camps built.">
+                Show filled
+              </label>
+            `)))
+        .append($(`<div>`)
+            .append($(`<input id="camp-target" class="form-check-input" type="number" name="Camp Target" min="1" max="5"
+                value="${localStorage.getItem("gbgcd_camp-target") || 4}">`)
+                .on("change", function () {
+                    setSetting("camp-target", this.value);
+                    $("#redistribute-btn").click(); // Redistribute camps with new camp target
+                }))
+            .append($(`<label class="form-check-label align-middle" for="camp-target" data-bs-toggle="tooltip"
+                title="The amount of camps each opposing province should be supported by. 4 by default.">Camp target</label>`)));
+}
+
 function sizeToFit() {
     let content = document.getElementById("content");
     let width = content.offsetWidth + 50;
     let height = content.offsetHeight + 60;
     window.resizeTo(width, height);
+}
+
+/**
+ * Acquires the value of a stored setting.
+ * @param name {string} The name of the option
+ * @param parser {function} The function used to parse the value from a string
+ * @return {*|string} Either the result from the given parser, a string, or undefined.
+ */
+function getSetting(name, parser) {
+    let value = localStorage.getItem("gbgcd_" + name);
+    if (!value) return value;
+
+    return parser ? parser(value) : value;
+}
+
+/**
+ * Stores the value of a setting
+ * @param name {string} The name of the setting
+ * @param value {*} The value of the setting, will be converted to a string.
+ */
+function setSetting(name, value) {
+    settings[name] = value;
+    localStorage.setItem("gbgcd_" + name, `${value}`);
 }
 
 function sendFoEMessage(type, data, callback) {
@@ -47,12 +110,15 @@ function sendFoEMessage(type, data, callback) {
 }
 
 function requestUpdateData(initial) {
-    sendFoEMessage("PROCESS_MAP", {initial: initial, campTarget: campTarget}, updateData);
+    sendFoEMessage("PROCESS_MAP", {initial: initial, campTarget: settings["camp-target"]}, updateData);
 }
 requestUpdateData(true);
 
+const resetData = () => updateData(lastResp);
+
 function updateData(resp) {
-    if (!resp) return; // Empty response
+    if (!resp || !resp.map) return; // Empty response (no gbgcd script loaded on receiving end) or no map
+    lastResp = resp;
 
     /**
      * @type {{provinces: [{name: string, id: int, neighborNames: [string], ours: boolean, slotCount: number, desiredCount: number, isSpawnSpot: boolean}]}}
@@ -66,7 +132,8 @@ function updateData(resp) {
     let count = 0;
     for (let province of Object.values(map.provinces)) {
         // Ignore provinces that aren't ours or that don't have to be filled.
-        if (!province.ours || province.slotCount === 0) continue;
+        if (!province.ours || province.slotCount === 0 || settings["show-filled"] &&
+            province.id in resp.builtCamps && resp.builtCamps[province.id] >= province.desiredCount) continue;
 
         if (count % 2 === 0) {
             // Create a new row.

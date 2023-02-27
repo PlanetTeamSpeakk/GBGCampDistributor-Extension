@@ -13,7 +13,7 @@ const GBGCD = (function () {   // Detach from global scope
     });
 
     // Guild data
-    FoEproxy.addHandler("StartupService", "getData", data => {
+    FoEproxy.addHandler("StartupService", "getData", (data, postData) => {
         let userData = data["responseData"]["user_data"];
         GBGCD.guild = {
             name: userData["clan_name"],
@@ -53,6 +53,7 @@ const GBGCD = (function () {   // Detach from global scope
         });
     });
 
+    // Process messages received by the extension.
     addEventListener("message", event => {
         if (event.data.target !== "FOE") return; // Ignore messages sent by us.
 
@@ -102,6 +103,10 @@ const GBGCD = (function () {   // Detach from global scope
             .map(({v}) => v);
     };
 
+    /**
+     * Parses the battleground from a request and distributes camps.
+     * @param resp {{string: any}}
+     */
     function parseBattlegrounds(resp) {
         // Acquire our guild's participant id.
         let pid;
@@ -113,6 +118,7 @@ const GBGCD = (function () {   // Detach from global scope
 
         if (!pid) return;
 
+        // Currently only support the volcano archipelago map, the other map will be added later.
         let mapData = resp.map;
         let map;
         switch (mapData.id) {
@@ -150,10 +156,10 @@ const GBGCD = (function () {   // Detach from global scope
             p.desiredCount = builtCamps[p.id] || 0; // Reset map first
 
         for (let p of Object.values(map.provinces).shuffle()) {
-            if (p.ours || p.isSpawnSpot) continue;
+            if (p.ours || p.isSpawnSpot) continue; // Don't take provinces we can't hit into account.
 
-            let ours = Array.from(p.neighbors).filter(n => n.ours);
-            let totalCC = ours
+            let ours = Array.from(p.neighbors).filter(n => n.ours); // Neighboring provinces that are ours
+            let totalCC = ours // The total amount of slots this province's neighbors have.
                 .map(n => n.slotCount)
                 .reduce((i1, i2) => i1 + i2, 0);
 
@@ -192,13 +198,11 @@ const GBGCD = (function () {   // Detach from global scope
 
     /**
      * Updates the badge info after camps have been distributed.
+     * @param map {GBGMap} The map the camps have been distributed on
      */
     function updateBadge(map) {
-        let res = Object.values(map.provinces)
+        let saved = Object.values(map.provinces) // Calculate the amount of camps we've saved.
             .filter(prov => prov.ours && prov.slotCount > 0)
-            .sort((prov1, prov2) => prov1.id < prov2.id ? -1 : prov1.id > prov2.id ? 1 : 0);
-
-        let saved = res
             .map(prov => prov.slotCount - prov.desiredCount)
             .reduce((total, current) => total + current, 0);
 
