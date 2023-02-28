@@ -117,7 +117,6 @@ requestUpdateData(true);
 const resetData = () => updateData(lastResp);
 
 function updateData(resp) {
-    console.log("Resp:", resp);
     if (!resp || !resp.map) {
         // Empty response (no gbgcd script loaded on receiving end) or no map
         // Show no-data modal
