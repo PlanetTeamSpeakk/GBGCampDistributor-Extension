@@ -117,7 +117,13 @@ requestUpdateData(true);
 const resetData = () => updateData(lastResp);
 
 function updateData(resp) {
-    if (!resp || !resp.map) return; // Empty response (no gbgcd script loaded on receiving end) or no map
+    console.log("Resp:", resp);
+    if (!resp || !resp.map) {
+        // Empty response (no gbgcd script loaded on receiving end) or no map
+        // Show no-data modal
+        bootstrap.Modal.getOrCreateInstance("#no-data-modal").show();
+        return;
+    }
     lastResp = resp;
 
     /**

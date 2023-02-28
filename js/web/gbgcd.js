@@ -81,7 +81,7 @@ const GBGCD = (function () {   // Detach from global scope
             case "CLEAR_BUILT_CAMPS":
                 builtCamps = {};
             case "PROCESS_MAP":
-                if (!data.initial || data.campTarget !== campTarget) {
+                if ((!data.initial || data.campTarget !== campTarget) && GBGCD.map) {
                     campTarget = data.campTarget;
                     distributeCamps(GBGCD.map, campTarget); // Redistribute camps when the extension asks to recalculate.
                 }
