@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GBG Camp Distributor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A small tool used to help distribute camps on Forge of Empires Guild Battlegrounds without wasting resources.",
   "author": "PlanetTeamSpeak",
   "icons": {
