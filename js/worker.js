@@ -1,3 +1,7 @@
+// Small script that always runs in the background.
+// Only used to listen to messages sent to the extension (and more specifically, this worker),
+// which currently only includes the camps saved message used for update the badge.
+
 chrome.runtime.onMessage.addListener(message => {
     if (message.target !== "WORKER") return;
 
@@ -18,5 +22,7 @@ function onMessage(type, data) {
                     }));
             });
             break;
+        default:
+            console.error("Received unknown message type from extension: " + type);
     }
 }

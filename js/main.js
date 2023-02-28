@@ -1,3 +1,6 @@
+// This file is the main script of the popup window of the extension.
+// It handles communication with the game page and displaying the results.
+
 const isPopup = window.location.search === "?popup";
 const settings = {
     "show-filled": getSetting("show-filled", v => v === "true") ?? true,
