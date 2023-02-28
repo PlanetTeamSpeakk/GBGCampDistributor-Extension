@@ -8,14 +8,21 @@
     let replyFunctions = {};
 
     addEventListener("load", () => {
-        // Inject our files in the DOM.
-        let files = ["gbgcd.js", "maps/Province.js", "maps/GBGMap.js", "maps/VolcanoArchipelagoMap.js"];
+        function appendNext(files) {
+            let file = files.shift();
 
-        for (let file of files) {
             let s = document.createElement("script");
             s.src = chrome.runtime.getURL("js/web/" + file);
+
+            if (files.length) s.onload = () => appendNext(files);
+
             (document.head || document.documentElement).appendChild(s);
         }
+
+        // Inject our files in the DOM.
+        let files = ["gbgcd.js", "maps/Province.js", "maps/GBGMap.js", "maps/VolcanoArchipelagoMap.js", "maps/WaterfallArchipelagoMap.js"];
+        // Ensure files get loaded in order.
+        appendNext(files);
     })
 
     chrome.runtime.onMessage.addListener((message, sender, reply) => {

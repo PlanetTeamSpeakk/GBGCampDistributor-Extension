@@ -118,12 +118,14 @@ const GBGCD = (function () {   // Detach from global scope
 
         if (!pid) return;
 
-        // Currently only support the volcano archipelago map, the other map will be added later.
         let mapData = resp.map;
         let map;
         switch (mapData.id) {
             case "volcano_archipelago":
                 map = new VolcanoArchipelagoMap();
+                break;
+            case "waterfall_archipelago":
+                map = new WaterfallArchipelagoMap();
                 break;
             default:
                 console.warn("Unsupported map! " + mapData.id);
