@@ -1,6 +1,6 @@
 // Small script that always runs in the background.
 // Only used to listen to messages sent to the extension (and more specifically, this worker),
-// which currently only includes the camps saved message used for update the badge.
+// which currently only includes the camps saved message used to update the badge.
 
 chrome.runtime.onMessage.addListener(message => {
     if (message.target !== "WORKER") return;
