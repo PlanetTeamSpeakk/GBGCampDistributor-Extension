@@ -63,7 +63,7 @@ function createSettingsPage() {
             `)))
         .append($(`<div>`)
             .append($(`<input id="camp-target" class="form-check-input" type="number" name="Camp Target" min="1" max="5"
-                value="${localStorage.getItem("gbgcd_camp-target") || 4}">`)
+                value="${settings["camp-target"]}">`)
                 .on("change", function () {
                     setSetting("camp-target", this.value);
                     $("#redistribute-btn").click(); // Redistribute camps with new camp target
