@@ -10,10 +10,18 @@ const GBGCD = (function () {   // Detach from global scope
         if (!GBGCD.guild) return; // Ensure we have our guild.
 
         GBGCD.map = parseBattlegrounds(data.responseData);
+        GBGCD.postInjectorMessage({
+            target: "POPUP", // If no popup is open, this message will be ignored.
+            type: "MAP_LOADED",
+            data: {
+                map: GBGCD.map ? GBGCD.map.stringify() : undefined,
+                builtCamps: builtCamps
+            }
+        });
     });
 
     // Guild data
-    FoEproxy.addHandler("StartupService", "getData", (data, postData) => {
+    FoEproxy.addHandler("StartupService", "getData", data => {
         let userData = data["responseData"]["user_data"];
         GBGCD.guild = {
             name: userData["clan_name"],
@@ -141,6 +149,7 @@ const GBGCD = (function () {   // Detach from global scope
                 province["totalBuildingSlots"] || 0, province["ownerId"] === pid, isSpawnSpot);
         }
 
+        // Distribute camps if this is the first time the map is loaded.
         distributeCamps(map, campTarget);
         return map;
     }

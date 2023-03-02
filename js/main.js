@@ -41,6 +41,9 @@ chrome.runtime.onMessage.addListener(message => {
     if (message.target !== "POPUP") return;
 
     switch (message.type) {
+        // If the map is loaded (that is the user goes to the GBG map in-game)
+        // display the data on this popup (if one was open).
+        case "MAP_LOADED":
         // If a province's owner is changed, the camps are redistributed.
         // We reflect that change here too (if a popup is open while it happens)
         case "PROVINCE_OWNERSHIP_CHANGE":
