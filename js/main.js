@@ -9,6 +9,7 @@ const settings = {
 const campTarget = 4; // Might end up making this an option, who knows?
 let lastResp;
 
+// General initialisation of the page.
 $(() => {
     if (isPopup) $("html, body").css({margin: 0});
 
@@ -37,6 +38,7 @@ $(() => {
     })
 });
 
+// Listen for messages sent to popups.
 chrome.runtime.onMessage.addListener(message => {
     if (message.target !== "POPUP") return;
 
@@ -54,6 +56,11 @@ chrome.runtime.onMessage.addListener(message => {
     }
 });
 
+/**
+ * Creates the settings page shown when the settings button is clicked.
+ * Incorporates the current values for each setting.
+ * @return {*|jQuery}
+ */
 function createSettingsPage() {
     return $(`<div id="settings-page" class="vstack gap-2 form-check">`)
         .append($(`<div>`)
@@ -80,6 +87,10 @@ function createSettingsPage() {
                 title="The amount of camps each opposing province should be supported by. 4 by default.">Camp target</label>`)));
 }
 
+/**
+ * Sizes the window to fit the content.
+ * Only used for popped out popups.
+ */
 function sizeToFit() {
     let content = document.getElementById("content");
     let width = content.offsetWidth + 50;
@@ -110,6 +121,20 @@ function setSetting(name, value) {
     localStorage.setItem("gbgcd_" + name, `${value}`);
 }
 
+/**
+ * Sends a message to the currently active tab.
+ * If no window has an active tab where the injector is loaded (so no FOE tab),
+ * the callback is called with no data.
+ *
+ * For each active tab (so for each active window as every window has 1 active tab),
+ * the callback is called once.
+ * The extension will likely break if there are two windows with FOE as active tab,
+ * but that's a very unlikely situation.
+ * @param type {string} The type of the message
+ * @param data {{}} The data to send along with it
+ * @param callback {function} The function to call when a response is received. Will
+ * always be called either with or without data and at least once per message.
+ */
 function sendFoEMessage(type, data, callback) {
     // Get the currently active tab and send our message to it.
     chrome.tabs.query({active: true}).then(tabs => tabs.forEach(tab => {
@@ -117,6 +142,12 @@ function sendFoEMessage(type, data, callback) {
     }));
 }
 
+/**
+ * Sends a message to any active tab asking for the processed map.
+ * If there is an active tab with a processed map, the upddateData function is called.
+ * @param initial {boolean} Whether this call is for the initial data. If true, the
+ * camps will not be redistributed on the receiving end before replying.
+ */
 function requestUpdateData(initial) {
     sendFoEMessage("PROCESS_MAP", {initial: initial, campTarget: settings["camp-target"]}, updateData);
 }
@@ -159,8 +190,17 @@ function displayNoDataModal() {
     bootstrap.Modal.getOrCreateInstance("#no-data-modal").show();
 }
 
+/**
+ * Updates the data using the last received response.
+ * Primarily used to apply setting changes without changing
+ * the data.
+ */
 const resetData = () => updateData(lastResp);
 
+/**
+ * Updates the data on the page.
+ * @param resp {{map: string, builtCamps: {number: number}}} The response received from the tab.
+ */
 function updateData(resp) {
     if (!resp || !resp.map) {
         // Empty response (no gbgcd script loaded on receiving end or no map)
@@ -239,8 +279,13 @@ function updateData(resp) {
     function updateShots(type, shots) {
         $(`#${type}`).text(`${shots.length}`);
 
-        bootstrap.Tooltip.getInstance(`#${type}-container`)
-            .setContent({".tooltip-inner": joinNicely(shots.map(p => `${p.p.name} (${p.c})`))}); // Update tooltip
+        let tooltip = bootstrap.Tooltip.getInstance(`#${type}-container`);
+
+        // Update tooltip
+        if (shots.length) {
+            tooltip.enable();
+            tooltip.setContent({".tooltip-inner": joinNicely(shots.map(p => `${p.p.name} (${p.c})`))});
+        } else tooltip.disable();
     }
 
     let undershot = campCounts.filter(p => p.c < campTarget);
