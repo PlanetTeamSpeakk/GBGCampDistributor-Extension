@@ -225,7 +225,7 @@ function updateData(resp) {
     let count = 0;
     for (let province of Object.values(map.provinces)) {
         // Ignore provinces that aren't ours or that don't have to be filled.
-        if (!province.ours || province.slotCount === 0 || settings["show-filled"] &&
+        if (!province.ours || province.slotCount === 0 || !settings["show-filled"] &&
             province.id in resp.builtCamps && resp.builtCamps[province.id] >= province.desiredCount) continue;
 
         if (count % 2 === 0) {
