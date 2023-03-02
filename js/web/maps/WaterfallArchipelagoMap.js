@@ -130,6 +130,6 @@ class WaterfallArchipelagoMap extends GBGMap {
         if (id < 1 + 6 + 12 + 18) return `${GBGCD.sumChar('A', (id - 1 - 6 - 12) / 3)}4${GBGCD.sumChar('A', (id - 1) % 3)}`;
 
         // Fifth ring (24 tiles)
-        if (id < 1 + 6 + 12 + 18 + 24) return `${GBGCD.sumChar('A', (id - 1 - 6 - 12 - 18) / 3)}3${GBGCD.sumChar('A', (id - 1) % 4)}`;
+        if (id < 1 + 6 + 12 + 18 + 24) return `${GBGCD.sumChar('A', (id - 1 - 6 - 12 - 18) / 4)}5${GBGCD.sumChar('A', (id - 1) % 4)}`;
     }
 }
