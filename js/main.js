@@ -27,8 +27,10 @@ $(() => {
         sendFoEMessage("CLEAR_BUILT_CAMPS", {campTarget: campTarget}, updateData));
 
     let popoutBtn = $("#pop-out-btn");
-    if (isPopup) popoutBtn.css({display: "none"})
-    else popoutBtn.on("click", () => {
+    if (isPopup) {
+        popoutBtn.css({display: "none"})
+        sizeToFit();
+    } else popoutBtn.on("click", () => {
         window.open(chrome.runtime.getURL("index.html?popup"),
             "_blank", "popup,width=400,height=620");
         window.close();
@@ -117,15 +119,55 @@ function requestUpdateData(initial) {
 }
 requestUpdateData(true);
 
+
+/**
+ * The value of the currently scheduled no-data modal display call.
+ * May be <code>undefined</code> if there isn't one defined yet.
+ * @type {number|undefined}
+ */
+let scheduledNDM;
+
+/**
+ * For the popout feature to work, the requested tab when sending a message must not
+ * be just the active window as the active window is likely the popup window.
+ * This means that the message may be sent multiple times which means multiple responses
+ * will be received (this is practically guaranteed if the window is popped out).
+ * This means that although this response may not be the one we're looking for, we
+ * might receive the one we are looking for in just a moment.
+ * Thus, we schedule the no-data modal to appear in 50 ms and if within that time, we do
+ * receive the response we're looking for, we cancel it.
+ *
+ * Schedules the no-data modal to display within 50 ms. Can be cancelled using scheduledNDM.
+ * @see scheduledNDM
+ */
+function scheduleNoDataModal() {
+    if (scheduledNDM) return;
+    scheduledNDM = setTimeout(displayNoDataModal, 50);
+}
+
+/**
+ * Actually displays the no-data modal. Also resets scheduledNDM.
+ * @see scheduleNoDataModal
+ * @see scheduledNDM
+ */
+function displayNoDataModal() {
+    scheduledNDM = undefined;
+    // Show no-data modal
+    bootstrap.Modal.getOrCreateInstance("#no-data-modal").show();
+}
+
 const resetData = () => updateData(lastResp);
 
 function updateData(resp) {
     if (!resp || !resp.map) {
-        // Empty response (no gbgcd script loaded on receiving end) or no map
-        // Show no-data modal
-        bootstrap.Modal.getOrCreateInstance("#no-data-modal").show();
+        // Empty response (no gbgcd script loaded on receiving end or no map)
+        scheduleNoDataModal();
         return;
     }
+
+    // Clear scheduled no-data modal display if one was scheduled as we received
+    // our data.
+    if (scheduledNDM) clearTimeout(scheduledNDM);
     lastResp = resp;
 
     /**
