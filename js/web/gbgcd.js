@@ -39,7 +39,10 @@ const GBGCD = (function () {   // Detach from global scope
         if (builtCamps[province] === built) return;
         builtCamps[province] = built;
 
-        if (GBGCD.map) distributeCamps(GBGCD.map, campTarget);
+        if (!GBGCD.map) return;
+
+        distributeCamps(GBGCD.map, campTarget);
+        sendMapUpdate();
     });
 
     // Province ownership changes (province conquered/lost)
@@ -48,17 +51,23 @@ const GBGCD = (function () {   // Detach from global scope
 
         let action = data.responseData.action;
         let provinceId = data.responseData.provinceId || 0;
+
+        if (action === "building_placed" && data.responseData.buildingId === "siege_camp") {
+            if (!builtCamps[provinceId]) builtCamps[provinceId] = 0;
+            builtCamps[provinceId]++;
+
+            distributeCamps(GBGCD.map, campTarget);
+            sendMapUpdate();
+            return;
+        }
+
+        // Ignore actions other than province conquered or lost
+        if (action !== "province_conquered" && action !== "province_lost") return;
+
         GBGCD.map.provinces[GBGCD.map.idToName(provinceId)].ours = action === "province_conquered";
 
         distributeCamps(GBGCD.map, campTarget);
-        GBGCD.postInjectorMessage({
-            target: "POPUP", // If no popup is open, this message will be ignored.
-            type: "PROVINCE_OWNERSHIP_CHANGE",
-            data: {
-                map: GBGCD.map ? GBGCD.map.stringify() : undefined,
-                builtCamps: builtCamps
-            }
-        });
+        sendMapUpdate();
     });
 
     // Process messages received by the extension.
@@ -101,6 +110,17 @@ const GBGCD = (function () {   // Detach from global scope
                 console.error("[GBGCD] Received unknown message type from extension: " + type);
                 break;
         }
+    }
+
+    function sendMapUpdate() {
+        GBGCD.postInjectorMessage({
+            target: "POPUP", // If no popup is open, this message will be ignored.
+            type: "MAP_UPDATED",
+            data: {
+                map: GBGCD.map ? GBGCD.map.stringify() : undefined,
+                builtCamps: builtCamps
+            }
+        });
     }
 
     // Define shuffle method for arrays.

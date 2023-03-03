@@ -6,6 +6,10 @@ span.built {
     color: firebrick;
 }
 
+.no-provinces {
+    font-weight: bold;
+}
+
 .icon-btn {
     position: absolute;
     width: 24px;

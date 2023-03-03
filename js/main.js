@@ -46,9 +46,9 @@ chrome.runtime.onMessage.addListener(message => {
         // If the map is loaded (that is the user goes to the GBG map in-game)
         // display the data on this popup (if one was open).
         case "MAP_LOADED":
-        // If a province's owner is changed, the camps are redistributed.
+        // If a province's owner is changed or a camp is built, the camps are redistributed.
         // We reflect that change here too (if a popup is open while it happens)
-        case "PROVINCE_OWNERSHIP_CHANGE":
+        case "MAP_UPDATED":
             updateData(message.data);
             break;
         default:
@@ -202,6 +202,7 @@ const resetData = () => updateData(lastResp);
  * @param resp {{map: string, builtCamps: {number: number}}} The response received from the tab.
  */
 function updateData(resp) {
+    console.log("resp", resp, !resp, !resp || !resp.map);
     if (!resp || !resp.map) {
         // Empty response (no gbgcd script loaded on receiving end or no map)
         scheduleNoDataModal();
@@ -257,11 +258,19 @@ function updateData(resp) {
         count++;
     }
 
-    if (count % 2 === 1)
-        // Add two empty cells
-        row.append($("<td>")).append($("<td>"));
+    // If we did not find any provinces to display,
+    // display a message we didn't find any instead.
+    if (!count) table
+        .append($("<tr>")
+            .append($(`<td class="text-center" colspan="4">`)
+                .append(`<span class="no-provinces">No provinces to display here</span>`)));
+    else {
+        if (count % 2 === 1)
+            // Add two empty cells
+            row.append($("<td>")).append($("<td>"));
 
-    table.append(row);
+        table.append(row);
+    }
     $('[data-toggle="tooltip"]').tooltip(); // Update tooltips
 
     // Map every province to the amount of camps it has according to our distribution.
