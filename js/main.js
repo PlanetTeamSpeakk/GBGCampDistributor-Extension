@@ -149,46 +149,10 @@ function sendFoEMessage(type, data, callback) {
  * camps will not be redistributed on the receiving end before replying.
  */
 function requestUpdateData(initial) {
-    sendFoEMessage("PROCESS_MAP", {initial: initial, campTarget: settings["camp-target"]}, updateData);
+    sendFoEMessage("PROCESS_MAP", {initial: initial, campTarget: settings["camp-target"]}, scheduleUpdate);
 }
 requestUpdateData(true);
 
-
-/**
- * The value of the currently scheduled no-data modal display call.
- * May be <code>undefined</code> if there isn't one defined yet.
- * @type {number|undefined}
- */
-let scheduledNDM;
-
-/**
- * For the popout feature to work, the requested tab when sending a message must not
- * be just the active window as the active window is likely the popup window.
- * This means that the message may be sent multiple times which means multiple responses
- * will be received (this is practically guaranteed if the window is popped out).
- * This means that although this response may not be the one we're looking for, we
- * might receive the one we are looking for in just a moment.
- * Thus, we schedule the no-data modal to appear in 50 ms and if within that time, we do
- * receive the response we're looking for, we cancel it.
- *
- * Schedules the no-data modal to display within 50 ms. Can be cancelled using scheduledNDM.
- * @see scheduledNDM
- */
-function scheduleNoDataModal() {
-    if (scheduledNDM) return;
-    scheduledNDM = setTimeout(displayNoDataModal, 50);
-}
-
-/**
- * Actually displays the no-data modal. Also resets scheduledNDM.
- * @see scheduleNoDataModal
- * @see scheduledNDM
- */
-function displayNoDataModal() {
-    scheduledNDM = undefined;
-    // Show no-data modal
-    bootstrap.Modal.getOrCreateInstance("#no-data-modal").show();
-}
 
 /**
  * Updates the data using the last received response.
@@ -197,21 +161,43 @@ function displayNoDataModal() {
  */
 const resetData = () => updateData(lastResp);
 
+let scheduledUpdate;
+let updateDataResp;
+
+/**
+ * When sending a message to the currently active tab, the message may be sent to multiple tabs
+ * as the user may have multiple windows open (especially if they've popped out the extension window).
+ * This would mean that we would receive multiple responses of which only one actually contains
+ * the requested data. We may get this response first or last, but in any case, we mustn't display
+ * the no-data modal if we receive at least one proper response.
+ *
+ * Hence, here we schedule the updateData function to be called with whatever data we got, if any of
+ * the responses received within 50 ms of the first response or the first response itself contains
+ * the requested data, that data will be used. Otherwise, the updateData function will display the
+ * no-data modal.
+ * @param resp {{map: string, builtCamps: {number: number}}} The response received from the tab.
+ */
+function scheduleUpdate(resp) {
+    if (resp && resp.map) updateDataResp = resp;
+
+    if (scheduledUpdate) clearTimeout(scheduledUpdate);
+    scheduledUpdate = setTimeout(updateData, 50);
+}
+
 /**
  * Updates the data on the page.
  * @param resp {{map: string, builtCamps: {number: number}}} The response received from the tab.
  */
 function updateData(resp) {
-    console.log("resp", resp, !resp, !resp || !resp.map);
+    if (!resp) resp = updateDataResp;
+    updateDataResp = undefined;
+
     if (!resp || !resp.map) {
         // Empty response (no gbgcd script loaded on receiving end or no map)
-        scheduleNoDataModal();
+        bootstrap.Modal.getOrCreateInstance("#no-data-modal").show();
         return;
     }
 
-    // Clear scheduled no-data modal display if one was scheduled as we received
-    // our data.
-    if (scheduledNDM) clearTimeout(scheduledNDM);
     lastResp = resp;
 
     /**
