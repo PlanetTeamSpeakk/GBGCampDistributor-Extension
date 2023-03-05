@@ -189,7 +189,7 @@ function scheduleUpdate(resp) {
  * @param resp {{map: string, builtCamps: {number: number}}} The response received from the tab.
  */
 function updateData(resp) {
-    if (!resp) resp = updateDataResp;
+    if (!resp || !resp.map) resp = updateDataResp;
     updateDataResp = undefined;
 
     if (!resp || !resp.map) {
@@ -210,10 +210,16 @@ function updateData(resp) {
 
     let row;
     let count = 0;
+    let leftToBuild = 0;
+    let totalSaved = 0;
     for (let province of Object.values(map.provinces)) {
         // Ignore provinces that aren't ours or that don't have to be filled.
-        if (!province.ours || province.slotCount === 0 || !settings["show-filled"] &&
-            province.id in resp.builtCamps && resp.builtCamps[province.id] >= province.desiredCount) continue;
+        if (!province.ours || province.slotCount === 0) continue;
+
+        totalSaved += province.slotCount - province.desiredCount;
+        if (!settings["show-filled"] && province.id in resp.builtCamps &&
+            resp.builtCamps[province.id] >= province.desiredCount) continue;
+        leftToBuild += province.id in resp.builtCamps ? Math.max(0, province.desiredCount -  resp.builtCamps[province.id]) : province.desiredCount;
 
         if (count % 2 === 0) {
             // Create a new row.
@@ -258,6 +264,10 @@ function updateData(resp) {
         table.append(row);
     }
     $('[data-toggle="tooltip"]').tooltip(); // Update tooltips
+
+    // Set total saved and left to build
+    $("#total-saved").text(`${totalSaved}`);
+    $("#left-to-build").text(`${leftToBuild}`);
 
     // Map every province to the amount of camps it has according to our distribution.
     let campCounts = Object.values(map.provinces)
