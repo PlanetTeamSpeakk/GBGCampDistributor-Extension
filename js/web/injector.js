@@ -21,7 +21,7 @@ addEventListener("load", () => {
     }
 
     // Inject our files in the DOM.
-    let files = ["gbgcd.js", "window.js", "maps/Province.js", "maps/GBGMap.js", "maps/VolcanoArchipelagoMap.js", "maps/WaterfallArchipelagoMap.js"];
+    let files = ["gbgcd.js", "tool.js", "maps/Province.js", "maps/GBGMap.js", "maps/VolcanoArchipelagoMap.js", "maps/WaterfallArchipelagoMap.js"];
     // Ensure files get loaded in order.
     appendNext(files);
 })
