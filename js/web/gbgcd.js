@@ -301,22 +301,3 @@ const GBGCD = (function () {   // Detach from global scope
 })();
 
 dispatchEvent(new Event("gbgcd#mainloaded"));
-
-
-
-
-/// FOE HELPER TOOL TEST
-addEventListener("foe-helper#loaded", function() {
-    _menu.Items.push("gbgcd");
-    _menu.gbgcd_Btn = () => {
-        let btn = _menu.MakeButton("gbgcd", "GBG Camp Distributor",
-            "<em id='gbgcd-Btn-closed'>Disabled: Visit the GBG map first!</em><br/>" +
-            "Distribute camps across the map without wasting resources.", true);
-
-        let btn_sp = $('<span />').on('click', function () {
-            if (GBGCD.map) GBGCDWindow.show();
-        });
-
-        return btn.append(btn_sp, $('<span id="gbgcd-count" class="hud-counter" style="display: none">0</span>'));
-    };
-});

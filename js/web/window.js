@@ -22,6 +22,9 @@ class GBGCDWindow {
         });
 
         $("#gbgcdBody")
+            .append($(`<table class="foe-table">`)
+                .append($(`<thead><tr><th>Province</th><th>Camps</th><th>Province</th><th>Camps</th></tr></thead>`))
+                .append($(`<tbody id="gbgcd__to-build"><tr><td colspan="4"><strong class="no-provinces text-center">No provinces to show here</strong></td></tr></tbody>`)))
             .append($(`<div class="dark-bg" style="padding: 5px">`)
                 .append($("<table style='width: 100%'>")
                     .append($("<tbody>")
@@ -44,11 +47,16 @@ class GBGCDWindow {
                                 .append($("<strong id='undershot'>0</strong>")))))));
     }
 
+    static updateData() {
+
+    }
+
     /**
      * Hides the red border of the tool button in the menu.
      */
     static enableToolBtn() {
         $("#gbgcd-Btn").removeClass("hud-btn-red");
+        $('#gbgcd-Btn-closed').remove();
     }
 
     static showSettings() {
@@ -103,3 +111,19 @@ class GBGCDWindow {
 // Set icon for the tool when the menu loads.
 addEventListener("foe-helper#menu_loaded", () => $("#gbgcd-Btn span").first()
     .css("background-image", `url(chrome-extension://${GBGCD.extId}/imgs/48-siege_camp.png)`));
+
+// Add the tool to the menu.
+addEventListener("foe-helper#loaded", function() {
+    _menu.Items.push("gbgcd");
+    _menu.gbgcd_Btn = () => {
+        let btn = _menu.MakeButton("gbgcd", "GBG Camp Distributor",
+            "<em id='gbgcd-Btn-closed' class='tooltip-error'>Disabled: Visit the GBG map first!<br/></em>" +
+            "Distribute camps across the map without wasting resources.", true);
+
+        let btn_sp = $('<span />').on('click', function () {
+            if (GBGCD.map) GBGCDWindow.show();
+        });
+
+        return btn.append(btn_sp, $('<span id="gbgcd-count" class="hud-counter" style="display: none">0</span>'));
+    };
+});
