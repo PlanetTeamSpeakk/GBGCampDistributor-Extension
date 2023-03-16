@@ -6,6 +6,8 @@ console.log(`Loading GBG Camp Distributor (${chrome.runtime.id})`);
 let msgId = 0;
 let replyFunctions = {};
 
+addEventListener("gbgcd#mainloaded", () => postMessage({source: "INJECTOR", target: "FOE", type: "ID", data: chrome.runtime.id}));
+
 addEventListener("load", () => {
     function appendNext(files) {
         let file = files.shift();
@@ -19,7 +21,7 @@ addEventListener("load", () => {
     }
 
     // Inject our files in the DOM.
-    let files = ["gbgcd.js", "maps/Province.js", "maps/GBGMap.js", "maps/VolcanoArchipelagoMap.js", "maps/WaterfallArchipelagoMap.js"];
+    let files = ["gbgcd.js", "window.js", "maps/Province.js", "maps/GBGMap.js", "maps/VolcanoArchipelagoMap.js", "maps/WaterfallArchipelagoMap.js"];
     // Ensure files get loaded in order.
     appendNext(files);
 })

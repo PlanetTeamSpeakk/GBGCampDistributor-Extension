@@ -8,6 +8,7 @@ const GBGCD = (function () {   // Detach from global scope
     // Battleground
     FoEproxy.addHandler("GuildBattlegroundService", "getBattleground", data => {
         if (!GBGCD.guild) return; // Ensure we have our guild.
+        let wasRed = !GBGCD.map;
 
         GBGCD.map = parseBattlegrounds(data.responseData);
         GBGCD.postInjectorMessage({
@@ -18,6 +19,8 @@ const GBGCD = (function () {   // Detach from global scope
                 builtCamps: builtCamps
             }
         });
+
+        if (wasRed && GBGCD.map) GBGCDWindow.enableToolBtn();
     });
 
     // Guild data
@@ -93,6 +96,12 @@ const GBGCD = (function () {   // Detach from global scope
     function onMessage(type, data) {
         // noinspection FallThroughInSwitchStatementJS // This is intended
         switch (type) {
+            case "ID":
+                GBGCD.extId = data;
+
+                // Add window css
+                $("head").append(`<link rel='stylesheet' type='text/css' href='chrome-extension://${data}/css/web/window.css'/>`);
+                return;
             case "REQUEST_GUILD":
                 return GBGCD.guild;
             case "CLEAR_BUILT_CAMPS":
@@ -124,12 +133,14 @@ const GBGCD = (function () {   // Detach from global scope
     }
 
     // Define shuffle method for arrays.
-    Array.prototype.shuffle = function () {
-        return this
-            .map(v => ({v: v, r: Math.random()}))
-            .sort((v1, v2) => v1.r - v2.r)
-            .map(({v}) => v);
-    };
+    Object.defineProperty(Array.prototype, "shuffle", {
+        value: function () {
+            return this
+                .map(v => ({v: v, r: Math.random()}))
+                .sort((v1, v2) => v1.r - v2.r)
+                .map(({v}) => v);
+        }
+    });
 
     /**
      * Parses the battleground from a request and distributes camps.
@@ -288,3 +299,24 @@ const GBGCD = (function () {   // Detach from global scope
     }
     return GBGCD;
 })();
+
+dispatchEvent(new Event("gbgcd#mainloaded"));
+
+
+
+
+/// FOE HELPER TOOL TEST
+addEventListener("foe-helper#loaded", function() {
+    _menu.Items.push("gbgcd");
+    _menu.gbgcd_Btn = () => {
+        let btn = _menu.MakeButton("gbgcd", "GBG Camp Distributor",
+            "<em id='gbgcd-Btn-closed'>Disabled: Visit the GBG map first!</em><br/>" +
+            "Distribute camps across the map without wasting resources.", true);
+
+        let btn_sp = $('<span />').on('click', function () {
+            if (GBGCD.map) GBGCDWindow.show();
+        });
+
+        return btn.append(btn_sp, $('<span id="gbgcd-count" class="hud-counter" style="display: none">0</span>'));
+    };
+});

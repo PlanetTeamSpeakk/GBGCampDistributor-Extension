@@ -27,7 +27,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["js/web/**"],
+      "resources": ["js/web/**", "css/web/**", "imgs/**"],
       "matches": ["*://*.forgeofempires.com/*"]
     }
   ],

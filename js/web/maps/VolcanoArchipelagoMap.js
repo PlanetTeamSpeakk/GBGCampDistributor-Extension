@@ -1,6 +1,6 @@
 class VolcanoArchipelagoMap extends GBGMap {
     constructor() {
-        super()
+        super();
 
         // First ring
         this.provinces["A1M"] = new Province(this, 0, "A1M");

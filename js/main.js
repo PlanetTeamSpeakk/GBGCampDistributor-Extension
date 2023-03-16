@@ -178,6 +178,7 @@ let updateDataResp;
  * @param resp {{map: string, builtCamps: {number: number}}} The response received from the tab.
  */
 function scheduleUpdate(resp) {
+    console.trace("Scheduling update", resp);
     if (resp && resp.map) updateDataResp = resp;
 
     if (scheduledUpdate) clearTimeout(scheduledUpdate);
@@ -191,6 +192,7 @@ function scheduleUpdate(resp) {
 function updateData(resp) {
     if (!resp || !resp.map) resp = updateDataResp;
     updateDataResp = undefined;
+    console.trace("Updating data", resp);
 
     if (!resp || !resp.map) {
         // Empty response (no gbgcd script loaded on receiving end or no map)
