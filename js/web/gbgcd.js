@@ -1,6 +1,5 @@
 const GBGCD = (function () {   // Detach from global scope
     let campTarget = 4;
-    let builtCamps = {};
 
     // Server time
     FoEproxy.addHandler("TimeService", "updateTime", data => GBGCD.time = data.responseData.time);
@@ -16,7 +15,7 @@ const GBGCD = (function () {   // Detach from global scope
             type: "MAP_LOADED",
             data: {
                 map: GBGCD.map ? GBGCD.map.stringify() : undefined,
-                builtCamps: builtCamps
+                builtCamps: GBGCD.builtCamps
             }
         });
 
@@ -39,8 +38,8 @@ const GBGCD = (function () {   // Detach from global scope
             .filter(building => building.id === "siege_camp")
             .length;
 
-        if (builtCamps[province] === built) return;
-        builtCamps[province] = built;
+        if (GBGCD.builtCamps[province] === built) return;
+        GBGCD.builtCamps[province] = built;
 
         if (!GBGCD.map) return;
 
@@ -56,8 +55,8 @@ const GBGCD = (function () {   // Detach from global scope
         let provinceId = data.responseData.provinceId || 0;
 
         if (action === "building_placed" && data.responseData.buildingId === "siege_camp") {
-            if (!builtCamps[provinceId]) builtCamps[provinceId] = 0;
-            builtCamps[provinceId]++;
+            if (!GBGCD.builtCamps[provinceId]) GBGCD.builtCamps[provinceId] = 0;
+            GBGCD.builtCamps[provinceId]++;
 
             distributeCamps(GBGCD.map, campTarget);
             sendMapUpdate();
@@ -105,7 +104,7 @@ const GBGCD = (function () {   // Detach from global scope
             case "REQUEST_GUILD":
                 return GBGCD.guild;
             case "CLEAR_BUILT_CAMPS":
-                builtCamps = {};
+                GBGCD.builtCamps = {};
             case "PROCESS_MAP":
                 if ((!data.initial || data.campTarget !== campTarget) && GBGCD.map) {
                     campTarget = data.campTarget;
@@ -113,7 +112,7 @@ const GBGCD = (function () {   // Detach from global scope
                 }
                 return {
                     map: GBGCD.map ? GBGCD.map.stringify() : undefined,
-                    builtCamps: builtCamps
+                    builtCamps: GBGCD.builtCamps
                 };
             default:
                 console.error("[GBGCD] Received unknown message type from extension: " + type);
@@ -127,7 +126,7 @@ const GBGCD = (function () {   // Detach from global scope
             type: "MAP_UPDATED",
             data: {
                 map: GBGCD.map ? GBGCD.map.stringify() : undefined,
-                builtCamps: builtCamps
+                builtCamps: GBGCD.builtCamps
             }
         });
     }
@@ -195,7 +194,7 @@ const GBGCD = (function () {   // Detach from global scope
      */
     function distributeCamps(map, campTarget) {
         for (let p of Object.values(map.provinces))
-            p.desiredCount = builtCamps[p.id] || 0; // Reset map first
+            p.desiredCount = GBGCD.builtCamps[p.id] || 0; // Reset map first
 
         for (let p of Object.values(map.provinces).shuffle()) {
             if (p.ours || p.isSpawnSpot) continue; // Don't take provinces we can't hit into account.
@@ -276,6 +275,14 @@ const GBGCD = (function () {   // Detach from global scope
          * @type {?GBGMap}
          */
         static map;
+        /**
+         * An object mapping province ids to camps built on that province.
+         * A province is only contained in this object if the amount of camps
+         * built there is known. I.e. the user has visited the Buildings menu
+         * of the province.
+         * @type {{int: int}}
+         */
+        static builtCamps;
 
         /**
          * Sums a char and some other variable
