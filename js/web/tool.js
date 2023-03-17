@@ -182,6 +182,8 @@ class GBGCDWindow {
                 .append($("<button class='btn btn-default' style='width: 100%'>")
                     .on("click", this.saveSettings)
                     .text(i18n('Boxes.Settings.Save'))));
+
+        this.updateData();
     }
 
     static saveSettings() {
