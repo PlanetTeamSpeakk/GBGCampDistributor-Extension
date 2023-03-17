@@ -1,7 +1,7 @@
-#gbgcdBody {
-    font-size: 85%;
-}
-
 #gbgcdBody .no-provinces {
     display: block;
+}
+
+#gbgcdBody .saved {
+    color: var(--text-success);
 }

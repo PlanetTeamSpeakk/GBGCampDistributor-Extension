@@ -1,6 +1,4 @@
 const GBGCD = (function () {   // Detach from global scope
-    let campTarget = 4;
-
     // Server time
     FoEproxy.addHandler("TimeService", "updateTime", data => GBGCD.time = data.responseData.time);
 
@@ -20,6 +18,7 @@ const GBGCD = (function () {   // Detach from global scope
         });
 
         if (wasRed && GBGCD.map) GBGCDWindow.enableToolBtn();
+        GBGCDWindow.updateData();
     });
 
     // Guild data
@@ -43,7 +42,7 @@ const GBGCD = (function () {   // Detach from global scope
 
         if (!GBGCD.map) return;
 
-        distributeCamps(GBGCD.map, campTarget);
+        distributeCamps(GBGCD.map, GBGCDWindow.settings.campTarget);
         sendMapUpdate();
     });
 
@@ -58,7 +57,7 @@ const GBGCD = (function () {   // Detach from global scope
             if (!GBGCD.builtCamps[provinceId]) GBGCD.builtCamps[provinceId] = 0;
             GBGCD.builtCamps[provinceId]++;
 
-            distributeCamps(GBGCD.map, campTarget);
+            distributeCamps(GBGCD.map, GBGCDWindow.settings.campTarget);
             sendMapUpdate();
             return;
         }
@@ -68,7 +67,7 @@ const GBGCD = (function () {   // Detach from global scope
 
         GBGCD.map.provinces[GBGCD.map.idToName(provinceId)].ours = action === "province_conquered";
 
-        distributeCamps(GBGCD.map, campTarget);
+        distributeCamps(GBGCD.map, GBGCDWindow.settings.campTarget);
         sendMapUpdate();
     });
 
@@ -106,9 +105,9 @@ const GBGCD = (function () {   // Detach from global scope
             case "CLEAR_BUILT_CAMPS":
                 GBGCD.builtCamps = {};
             case "PROCESS_MAP":
-                if ((!data.initial || data.campTarget !== campTarget) && GBGCD.map) {
-                    campTarget = data.campTarget;
-                    distributeCamps(GBGCD.map, campTarget); // Redistribute camps when the extension asks to recalculate.
+                if ((!data.initial || data.campTarget !== GBGCDWindow.settings.campTarget) && GBGCD.map) {
+                    GBGCDWindow.settings.campTarget = data.campTarget;
+                    distributeCamps(GBGCD.map, GBGCDWindow.settings.campTarget); // Redistribute camps when the extension asks to recalculate.
                 }
                 return {
                     map: GBGCD.map ? GBGCD.map.stringify() : undefined,
@@ -129,6 +128,7 @@ const GBGCD = (function () {   // Detach from global scope
                 builtCamps: GBGCD.builtCamps
             }
         });
+        GBGCDWindow.updateData();
     }
 
     // Define shuffle method for arrays.
@@ -180,7 +180,7 @@ const GBGCD = (function () {   // Detach from global scope
         }
 
         // Distribute camps if this is the first time the map is loaded.
-        distributeCamps(map, campTarget);
+        distributeCamps(map, GBGCDWindow.settings.campTarget);
         return map;
     }
 
@@ -282,7 +282,7 @@ const GBGCD = (function () {   // Detach from global scope
          * of the province.
          * @type {{int: int}}
          */
-        static builtCamps;
+        static builtCamps = {};
 
         /**
          * Sums a char and some other variable
