@@ -57,7 +57,7 @@ class GBGCDWindow {
         if (!GBGCD.map) return;
 
         let table = $("#gbgcd__provinces");
-        if (!table.length) return; // No table present.
+        let boxOpen = table.length > 0;
 
         table.empty(); // Ensure it's empty when we start.
 
@@ -73,6 +73,11 @@ class GBGCDWindow {
             if (!this.settings.showFilled && province.id in GBGCD.builtCamps &&
                 GBGCD.builtCamps[province.id] >= province.desiredCount) continue;
             leftToBuild += province.id in GBGCD.builtCamps ? Math.max(0, province.desiredCount -  GBGCD.builtCamps[province.id]) : province.desiredCount;
+
+            // If the window is not open, ignore the rows.
+            // We're only really interested in the total amount of
+            // camps saved in this case.
+            if (!boxOpen) continue;
 
             if (count % 2 === 0) {
                 // Create a new row.
@@ -102,6 +107,12 @@ class GBGCDWindow {
                 .append(campsColumn);
             count++;
         }
+
+        $("#gbgcd-count")
+            .text(`${totalSaved}`)
+            .css({display: 'initial'});
+
+        if (!boxOpen) return; // Rest is all box-related
 
         // If we did not find any provinces to display,
         // display a message we didn't find any instead.
@@ -212,6 +223,7 @@ class GBGCDWindow {
     let settings = localStorage.getItem("gbgcdSettings");
 
     if (!settings) {
+        // No settings present, use default values.
         GBGCDWindow.settings = {showFilled: true, campTarget: 4};
         return;
     }
