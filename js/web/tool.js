@@ -162,7 +162,7 @@ class GBGCDWindow {
      */
     static enableToolBtn() {
         $("#gbgcd-Btn").removeClass("hud-btn-red");
-        $('#gbgcd-Btn-closed').remove();
+        $("#gbgcd-Btn-closed").remove();
     }
 
     static showSettings() {

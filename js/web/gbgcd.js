@@ -5,7 +5,6 @@ const GBGCD = (function () {   // Detach from global scope
     // Battleground
     FoEproxy.addHandler("GuildBattlegroundService", "getBattleground", data => {
         if (!GBGCD.guild) return; // Ensure we have our guild.
-        let wasRed = !GBGCD.map;
 
         GBGCD.map = parseBattlegrounds(data.responseData);
         GBGCD.postInjectorMessage({
@@ -17,7 +16,7 @@ const GBGCD = (function () {   // Detach from global scope
             }
         });
 
-        if (wasRed && GBGCD.map) GBGCDWindow.enableToolBtn();
+        if (GBGCD.map) GBGCDWindow.enableToolBtn();
         GBGCDWindow.updateData();
     });
 
