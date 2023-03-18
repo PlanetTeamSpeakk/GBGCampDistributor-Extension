@@ -307,6 +307,15 @@ const GBGCD = (function () {   // Detach from global scope
             msg.source = "FOE";
             postMessage(msg);
         }
+
+        /**
+         * Redistributes camps on the map with the given camp target.
+         * @param campTarget {number} The amount of camps every province should be supported by.
+         */
+        static redistribute(campTarget) {
+            distributeCamps(this.map, campTarget);
+            GBGCDWindow.updateData();
+        }
     }
     return GBGCD;
 })();

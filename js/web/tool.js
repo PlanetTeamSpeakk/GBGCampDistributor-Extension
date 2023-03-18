@@ -4,7 +4,11 @@ and displaying and requesting the data.
 */
 
 class GBGCDWindow {
-    static settings = {};
+    /**
+     *
+     * @type {{showFilled: boolean, campTarget: number}}
+     */
+    static settings = {showFilled: true, campTarget: 4};
 
     /**
      * Shows this window. Hides the existing one instead if there is already one open.
@@ -27,6 +31,9 @@ class GBGCDWindow {
         });
 
         $("#gbgcdBody")
+            // .append($(`<div class="mx-auto" style="width: 85%"><small>Visit the buildings menu of provinces owned by your guild to incorporate existing camps ` +
+            //     `in the calculations.</small></div>`))
+            .append($(`<h4 class="text-center">Camps to build:</h4>`))
             .append($(`<table class="foe-table">
                                 <thead>
                                     <tr>
@@ -55,7 +62,12 @@ class GBGCDWindow {
                                         </tr>
                                     </tbody>
                                 </table>
-                            </div>`));
+                            </div>`)
+                .append($("<div class='mx-auto h-stack mt-2'>")
+                    .append($(`<button class="btn btn-default" title="Redistribute the camps across the board">Redistribute</button>`)
+                        .on("click", () => GBGCD.redistribute(this.settings.campTarget)))
+                    .append($(`<button class="btn btn-default btn-delete" title="Clear all known built camps">Clear built camps</button>`)
+                        .on("click", () => GBGCD.redistribute(this.settings.campTarget)))));
         this.updateData();
     }
 
@@ -100,11 +112,7 @@ class GBGCDWindow {
                 let built = GBGCD.builtCamps[province.id];
                 campsColumn
                     .append(" ")
-                    .append($("<span>")
-                        .addClass("built")
-                        .attr("data-toggle", "tooltip")
-                        .attr("title", `${built} camp${built === 1 ? "" : "s"} already built`)
-                        .text(`(${built})`));
+                    .append($(`<span class="built" title="${built} camp${built === 1 ? "" : "s"} already built">(${built})</span>`));
             }
 
             row
@@ -230,13 +238,8 @@ class GBGCDWindow {
 (function() {
     let settings = localStorage.getItem("gbgcdSettings");
 
-    if (!settings) {
-        // No settings present, use default values.
-        GBGCDWindow.settings = {showFilled: true, campTarget: 4};
-        return;
-    }
-
-    GBGCDWindow.settings = JSON.parse(settings);
+    // If settings are stored, load those. Otherwise, use defaults.
+    if (settings) GBGCDWindow.settings = JSON.parse(settings);
 })();
 
 // Set icon for the tool when the menu loads.

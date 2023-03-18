@@ -5,3 +5,19 @@
 #gbgcdBody .saved {
     color: var(--text-success);
 }
+
+#gbgcdBody .h-stack {
+    width: fit-content;
+}
+
+#gbgcdBody .h-stack > * {
+    margin: 0 10px;
+}
+
+#gbgcdBody .mt-2 {
+    margin-top: 10px;
+}
+
+#gbgcdBody h4 {
+    margin: 10px auto;
+}
