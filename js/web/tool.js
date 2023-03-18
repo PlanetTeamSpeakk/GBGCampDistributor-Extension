@@ -47,10 +47,10 @@ class GBGCDWindow {
                                     <tbody>
                                         <tr>
                                             <td>Left to build: <strong id="left-to-build">0</strong></td>
-                                            <td>Total saved: <strong id="total-saved">0</strong></td>
+                                            <td class="text-right">Total saved: <strong id="total-saved">0</strong></td>
                                         </tr>
                                         <tr>
-                                            <td class="text-right">Overshot: <strong id="overshot">0</strong></td>
+                                            <td>Overshot: <strong id="overshot">0</strong></td>
                                             <td class="text-right">Undershot: <strong id="undershot">0</strong></td>
                                         </tr>
                                     </tbody>
@@ -135,7 +135,9 @@ class GBGCDWindow {
         }
 
         // Set total saved and left to build
-        $("#total-saved").text(`${totalSaved}`);
+        $("#total-saved")
+            .attr("class", totalSaved === 0 ? "" : "saved")
+            .text(`${totalSaved}`);
         $("#left-to-build").text(`${leftToBuild}`);
 
         // Map every province to the amount of camps it has according to our distribution.
