@@ -56,7 +56,12 @@ const GBGCD = (function () {   // Detach from global scope
             if (!GBGCD.builtCamps[provinceId]) GBGCD.builtCamps[provinceId] = 0;
             GBGCD.builtCamps[provinceId]++;
 
-            distributeCamps(GBGCD.map, GBGCDWindow.settings.campTarget);
+            // If the amount of built camps has exceeded the desired amount, see if we can redistribute them.
+            // Otherwise, keep the current distribution. This prevents the desired camps being shuffled
+            // around while building the camps this extension suggests.
+            if (GBGCD.map.provinces[GBGCD.map.idToName(provinceId)].desiredCount < GBGCD.builtCamps[provinceId])
+                distributeCamps(GBGCD.map, GBGCDWindow.settings.campTarget);
+
             sendMapUpdate();
             return;
         }
