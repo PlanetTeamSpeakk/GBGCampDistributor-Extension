@@ -218,6 +218,7 @@ class GBGCDWindow {
         GBGCDWindow.settings.campTarget = parseInt($("#camp-target").val() ?? "4");
 
         localStorage.setItem("gbgcdSettings", JSON.stringify(GBGCDWindow.settings));
+        GBGCDWindow.updateData();
     }
 
     /**
@@ -250,6 +251,13 @@ addEventListener("foe-helper#menu_loaded", () => $("#gbgcd-Btn span").first()
 addEventListener("foe-helper#loaded", function() {
     _menu.Items.push("gbgcd");
     _menu.gbgcd_Btn = () => {
+        // If the player does not have the GBG Officer permission in their guild,
+        // remove this tool as it's of no use to them.
+        if ((ExtGuildPermission & GuildMemberStat.GuildPermission_GBGOfficer) !== GuildMemberStat.GuildPermission_GBGOfficer) {
+            delete _menu.Items[_menu.Items.indexOf("gbgcd")];
+            return;
+        }
+
         let btn = _menu.MakeButton("gbgcd", "GBG Camp Distributor",
             "<em id='gbgcd-Btn-closed' class='tooltip-error'>Disabled: Visit the GBG map first!<br/></em>" +
             "Distribute camps across the map without wasting resources.", true);
