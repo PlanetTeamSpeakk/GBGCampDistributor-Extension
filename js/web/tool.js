@@ -27,29 +27,35 @@ class GBGCDWindow {
         });
 
         $("#gbgcdBody")
-            .append($(`<table class="foe-table">`)
-                .append($(`<thead><tr><th>Province</th><th>Camps</th><th>Province</th><th>Camps</th></tr></thead>`))
-                .append($(`<tbody id="gbgcd__provinces"><tr><td colspan="4"><strong class="no-provinces text-center">No provinces to show here</strong></td></tr></tbody>`)))
-            .append($(`<div class="dark-bg" style="padding: 5px">`)
-                .append($("<table style='width: 100%'>")
-                    .append($("<tbody>")
-                        .append($("<tr>")
-                            .append($("<td>")
-                                .text("Left to build: ")
-                                .append($("<strong id='left-to-build'>0</strong>")))
-                            .append($("<td>")
-                                .addClass("text-right")
-                                .text("Total saved: ")
-                                .append($("<strong id='total-saved' class='success'>0</strong>"))))
-
-                        .append($("<tr>")
-                            .append($("<td>")
-                                .text("Overshot: ")
-                                .append($("<strong id='overshot'>0</strong>")))
-                            .append($("<td>")
-                                .addClass("text-right")
-                                .text("Undershot: ")
-                                .append($("<strong id='undershot'>0</strong>")))))));
+            .append($(`<table class="foe-table">
+                                <thead>
+                                    <tr>
+                                        <th>Province</th>
+                                        <th>Camps</th>
+                                        <th>Province</th>
+                                        <th>Camps</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gbgcd__provinces">
+                                    <tr>
+                                        <td colspan="4"><strong class="no-provinces text-center">No provinces to show here</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>`))
+            .append($(`<div class="dark-bg" style="padding: 5px">
+                                <table style="width: 100%">
+                                    <tbody>
+                                        <tr>
+                                            <td>Left to build: <strong id="left-to-build">0</strong></td>
+                                            <td>Total saved: <strong id="total-saved" class="success">0</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Overshot: <strong id="overshot">0</strong></td>
+                                            <td>Undershot: <strong id="undershot">0</strong></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>`));
         this.updateData();
     }
 
