@@ -47,11 +47,11 @@ class GBGCDWindow {
                                     <tbody>
                                         <tr>
                                             <td>Left to build: <strong id="left-to-build">0</strong></td>
-                                            <td>Total saved: <strong id="total-saved" class="success">0</strong></td>
+                                            <td>Total saved: <strong id="total-saved">0</strong></td>
                                         </tr>
                                         <tr>
-                                            <td>Overshot: <strong id="overshot">0</strong></td>
-                                            <td>Undershot: <strong id="undershot">0</strong></td>
+                                            <td class="text-right">Overshot: <strong id="overshot">0</strong></td>
+                                            <td class="text-right">Undershot: <strong id="undershot">0</strong></td>
                                         </tr>
                                     </tbody>
                                 </table>
