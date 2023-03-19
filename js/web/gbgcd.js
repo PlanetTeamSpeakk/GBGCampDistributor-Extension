@@ -24,6 +24,9 @@ const GBGCD = (function () {   // Detach from global scope
     // Built camps storage
     FoEproxy.addHandler("GuildBattlegroundBuildingService", "getBuildings", data => {
         let province = data.responseData.provinceId || 0;
+        let pName = GBGCD.map.idToName(province);
+        if (!GBGCD.map.provinces[pName].ours) return;
+
         let built = data.responseData.placedBuildings
             .filter(building => building.id === "siege_camp")
             .length;
@@ -35,7 +38,7 @@ const GBGCD = (function () {   // Detach from global scope
 
         // Redistribute the camps if this tile already has more camps
         // than we bargained for.
-        if (built > GBGCD.map.provinces[GBGCD.map.idToName(province)].desiredCount)
+        if (built > GBGCD.map.provinces[pName].desiredCount)
             GBGCD.redistribute();
 
         GBGCDWindow.updateData();
