@@ -7,14 +7,6 @@ const GBGCD = (function () {   // Detach from global scope
         if (!GBGCD.guild) return; // Ensure we have our guild.
 
         GBGCD.map = parseBattlegrounds(data.responseData);
-        GBGCD.postInjectorMessage({
-            target: "POPUP", // If no popup is open, this message will be ignored.
-            type: "MAP_LOADED",
-            data: {
-                map: GBGCD.map ? GBGCD.map.stringify() : undefined,
-                builtCamps: GBGCD.builtCamps
-            }
-        });
 
         if (GBGCD.map) GBGCDWindow.enableToolBtn();
         GBGCDWindow.updateData();
@@ -42,7 +34,7 @@ const GBGCD = (function () {   // Detach from global scope
         if (!GBGCD.map) return;
 
         distributeCamps(GBGCD.map, GBGCDWindow.settings.campTarget);
-        sendMapUpdate();
+        GBGCDWindow.updateData();
     });
 
     // Province ownership changes (province conquered/lost)
@@ -62,7 +54,7 @@ const GBGCD = (function () {   // Detach from global scope
             if (GBGCD.map.provinces[GBGCD.map.idToName(provinceId)].desiredCount < GBGCD.builtCamps[provinceId])
                 distributeCamps(GBGCD.map, GBGCDWindow.settings.campTarget);
 
-            sendMapUpdate();
+            GBGCDWindow.updateData();
             return;
         }
 
@@ -72,28 +64,20 @@ const GBGCD = (function () {   // Detach from global scope
         GBGCD.map.provinces[GBGCD.map.idToName(provinceId)].ours = action === "province_conquered";
 
         distributeCamps(GBGCD.map, GBGCDWindow.settings.campTarget);
-        sendMapUpdate();
+        GBGCDWindow.updateData();
     });
 
     // Process messages received by the extension.
     addEventListener("message", event => {
         if (event.data.target !== "FOE") return; // Ignore messages sent by us.
 
-        let resp = onMessage(event.data.type, event.data.data);
-        if (!resp) return;
-
-        // Send response
-        GBGCD.postInjectorMessage({
-            id: event.data.id,
-            data: resp
-        });
+        onMessage(event.data.type, event.data.data);
     });
 
     /**
      * Used to process messages.
      * @param type {string} The type of the message
      * @param data {object} The data associated with the message
-     * @return {(undefined|{})} A possible response message, may also return nothing.
      */
     function onMessage(type, data) {
         // noinspection FallThroughInSwitchStatementJS // This is intended
@@ -104,35 +88,10 @@ const GBGCD = (function () {   // Detach from global scope
                 // Add window css
                 $("head").append(`<link rel='stylesheet' type='text/css' href='chrome-extension://${data}/css/web/window.css'/>`);
                 return;
-            case "REQUEST_GUILD":
-                return GBGCD.guild;
-            case "CLEAR_BUILT_CAMPS":
-                GBGCD.builtCamps = {};
-            case "PROCESS_MAP":
-                if ((!data.initial || data.campTarget !== GBGCDWindow.settings.campTarget) && GBGCD.map) {
-                    GBGCDWindow.settings.campTarget = data.campTarget;
-                    distributeCamps(GBGCD.map, GBGCDWindow.settings.campTarget); // Redistribute camps when the extension asks to recalculate.
-                }
-                return {
-                    map: GBGCD.map ? GBGCD.map.stringify() : undefined,
-                    builtCamps: GBGCD.builtCamps
-                };
             default:
                 console.error("[GBGCD] Received unknown message type from extension: " + type);
                 break;
         }
-    }
-
-    function sendMapUpdate() {
-        GBGCD.postInjectorMessage({
-            target: "POPUP", // If no popup is open, this message will be ignored.
-            type: "MAP_UPDATED",
-            data: {
-                map: GBGCD.map ? GBGCD.map.stringify() : undefined,
-                builtCamps: GBGCD.builtCamps
-            }
-        });
-        GBGCDWindow.updateData();
     }
 
     // Define shuffle method for arrays.
@@ -237,28 +196,6 @@ const GBGCD = (function () {   // Detach from global scope
                     if (campsLeft === 0) break;
                 }
         }
-
-        updateBadge(map);
-    }
-
-    /**
-     * Updates the badge info after camps have been distributed.
-     * @param map {GBGMap} The map the camps have been distributed on
-     */
-    function updateBadge(map) {
-        let saved = Object.values(map.provinces) // Calculate the amount of camps we've saved.
-            .filter(prov => prov.ours && prov.slotCount > 0)
-            .map(prov => prov.slotCount - prov.desiredCount)
-            .reduce((total, current) => total + current, 0);
-
-        // Set badge info
-        GBGCD.postInjectorMessage({
-            target: "WORKER",
-            type: "CAMPS_SAVED",
-            data: {
-                saved: saved
-            }
-        });
     }
 
     class GBGCD {
@@ -296,16 +233,6 @@ const GBGCD = (function () {   // Detach from global scope
          */
         static sumChar(char, i) {
             return String.fromCharCode(char.charCodeAt(0) + i);
-        }
-
-        /**
-         * Posts a message to the window. Usually meant to be received by the injector
-         * which can then redirect it to other parts of the extension.
-         * @param msg The message to send.
-         */
-        static postInjectorMessage(msg) {
-            msg.source = "FOE";
-            postMessage(msg);
         }
 
         /**

@@ -12,7 +12,6 @@
   },
 
   "action": {
-    "default_popup": "index.html",
     "default_title": "GBG Camp Distributor"
   },
   "host_permissions": [
@@ -30,8 +29,5 @@
       "resources": ["js/web/**", "css/web/**", "imgs/**"],
       "matches": ["*://*.forgeofempires.com/*"]
     }
-  ],
-  "background": {
-    "service_worker": "js/worker.js"
-  }
+  ]
 }
