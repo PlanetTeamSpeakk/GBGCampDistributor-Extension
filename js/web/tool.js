@@ -6,9 +6,9 @@ and displaying and requesting the data.
 class GBGCDWindow {
     /**
      *
-     * @type {{showFilled: boolean, campTarget: number}}
+     * @type {{showFilled: boolean, campTarget: number, showBadge: boolean}}
      */
-    static settings = {showFilled: true, campTarget: 4};
+    static settings = {showFilled: true, campTarget: 4, showBadge: true};
 
     /**
      * Shows this window. Hides the existing one instead if there is already one open.
@@ -124,7 +124,7 @@ class GBGCDWindow {
 
         $("#gbgcd-count")
             .text(`${totalSaved}`)
-            .css({display: 'initial'});
+            .css({display: this.settings.showBadge ? "initial" : "none"});
 
         if (!boxOpen) return; // Rest is all box-related
 
@@ -182,16 +182,25 @@ class GBGCDWindow {
     }
 
     static showSettings() {
-        // let campTarget = Settings.GetSetting('GBGCD_CampTarget');
-
-        let settingsBox = $('#gbgcdSettingsBox');
-        settingsBox.empty();
-        settingsBox
+        let settingsBox = $('#gbgcdSettingsBox')
+            .empty()
+            // Show badge
             .append($("<p>")
-                .append($(`<input id="show-filled" class="form-check-input" type="checkbox">`)
+                .append($(`<input id="gbgcd__show-badge" type="checkbox">`)
+                    .prop("checked", this.settings.showBadge))
+                .append($(`
+                  <label for="gbgcd__show-badge" 
+                    title="Whether to show the badge that displays the amount of camps saved in the menu.">
+                    Show badge
+                  </label>
+                `)))
+
+            // Show filled
+            .append($("<p>")
+                .append($(`<input id="gbgcd__show-filled" type="checkbox">`)
                     .prop("checked", this.settings.showFilled))
                 .append($(`
-                  <label class="form-check-label" for="show-filled" 
+                  <label for="gbgcd__show-filled" 
                     title="Whether to show provinces that already have the desired amount of camps built.">
                     Show filled
                   </label>
@@ -199,9 +208,9 @@ class GBGCDWindow {
 
             // Camp target
             .append($(`<p>`)
-                .append($(`<input id="camp-target" type="number" name="Camp Target" min="1" max="5">`)
+                .append($(`<input id="gbgcd__camp-target" type="number" name="Camp Target" min="1" max="5">`)
                     .prop("value", this.settings.campTarget))
-                .append($(`<label for="camp-target"
+                .append($(`<label for="gbgcd__camp-target"
                 title="The amount of camps each opposing province should be supported by. 4 by default.">Camp target</label>`)))
 
             // Save button
@@ -214,8 +223,9 @@ class GBGCDWindow {
     }
 
     static saveSettings() {
-        GBGCDWindow.settings.showFilled = $("#show-filled").is(":checked");
-        GBGCDWindow.settings.campTarget = parseInt($("#camp-target").val() ?? "4");
+        GBGCDWindow.settings.showBadge = $("#gbgcd__show-badge").is(":checked");
+        GBGCDWindow.settings.showFilled = $("#gbgcd__show-filled").is(":checked");
+        GBGCDWindow.settings.campTarget = parseInt($("#gbgcd__camp-target").val() ?? "4");
 
         localStorage.setItem("gbgcdSettings", JSON.stringify(GBGCDWindow.settings));
         GBGCDWindow.updateData();
@@ -240,7 +250,16 @@ class GBGCDWindow {
     let settings = localStorage.getItem("gbgcdSettings");
 
     // If settings are stored, load those. Otherwise, use defaults.
-    if (settings) GBGCDWindow.settings = JSON.parse(settings);
+    if (!settings) return;
+
+    let old = GBGCDWindow.settings;
+    GBGCDWindow.settings = JSON.parse(settings);
+
+    // If any new options were added since last save,
+    // load the defaults for those.
+    for (let opt in old)
+        if (GBGCDWindow.settings[opt] === undefined)
+            GBGCDWindow.settings[opt] = old[opt];
 })();
 
 // Set icon for the tool when the menu loads.
