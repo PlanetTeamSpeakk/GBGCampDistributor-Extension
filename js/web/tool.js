@@ -6,14 +6,16 @@ and displaying and requesting the data.
 class GBGCDWindow {
     /**
      *
-     * @type {{showFilled: boolean, campTarget: number, showBadge: boolean}}
+     * @type {{showFilled: boolean, campTarget: number, showBadge: boolean, autoOpen: boolean}}
      */
-    static settings = {showFilled: true, campTarget: 4, showBadge: true};
+    static settings = {showFilled: true, campTarget: 4, showBadge: true, autoOpen: true};
 
     /**
      * Shows this window. Hides the existing one instead if there is already one open.
      */
-    static show() {
+    static show(auto = false) {
+        if (auto && !this.settings.autoOpen) return;
+
         // If the window is currently open, close it.
         if ($('#gbgcd').length > 0)
         {
@@ -31,8 +33,6 @@ class GBGCDWindow {
         });
 
         $("#gbgcdBody")
-            // .append($(`<div class="mx-auto" style="width: 85%"><small>Visit the buildings menu of provinces owned by your guild to incorporate existing camps ` +
-            //     `in the calculations.</small></div>`))
             .append($(`<h4 class="text-center">Camps to build:</h4>`))
             .append($(`<table class="foe-table">
                                 <thead>
@@ -53,12 +53,12 @@ class GBGCDWindow {
                                 <table style="width: 100%">
                                     <tbody>
                                         <tr>
-                                            <td>Left to build: <strong id="left-to-build">0</strong></td>
-                                            <td class="text-right">Total saved: <strong id="total-saved">0</strong></td>
+                                            <td><span>Left to build: <strong id="left-to-build">0</strong></span></td>
+                                            <td class="text-right"><span>Total saved: <strong id="total-saved">0</strong></span></td>
                                         </tr>
                                         <tr>
-                                            <td>Overshot: <strong id="overshot">0</strong></td>
-                                            <td class="text-right">Undershot: <strong id="undershot">0</strong></td>
+                                            <td><span>Overshot: <strong id="overshot">0</strong></span></td>
+                                            <td class="text-right"><span>Undershot: <strong id="undershot">0</strong></span></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -182,7 +182,7 @@ class GBGCDWindow {
     }
 
     static showSettings() {
-        let settingsBox = $('#gbgcdSettingsBox')
+        $('#gbgcdSettingsBox')
             .empty()
             // Show badge
             .append($("<p>")
@@ -192,6 +192,17 @@ class GBGCDWindow {
                   <label for="gbgcd__show-badge" 
                     title="Whether to show the badge that displays the amount of camps saved in the menu.">
                     Show badge
+                  </label>
+                `)))
+
+            // Auto-open
+            .append($("<p>")
+                .append($(`<input id="gbgcd__auto-open" type="checkbox">`)
+                    .prop("checked", this.settings.autoOpen))
+                .append($(`
+                  <label for="gbgcd__auto-open" 
+                    title="Whether to automatically open this tool when going to the buildings page of any province you own.">
+                    Auto-open
                   </label>
                 `)))
 
@@ -223,11 +234,15 @@ class GBGCDWindow {
     }
 
     static saveSettings() {
-        GBGCDWindow.settings.showBadge = $("#gbgcd__show-badge").is(":checked");
-        GBGCDWindow.settings.showFilled = $("#gbgcd__show-filled").is(":checked");
-        GBGCDWindow.settings.campTarget = parseInt($("#gbgcd__camp-target").val() ?? "4");
+        let isChecked = id => $("#gbgcd__" + id).is(":checked")
 
-        localStorage.setItem("gbgcdSettings", JSON.stringify(GBGCDWindow.settings));
+        let s = GBGCDWindow.settings;
+        s.showBadge = isChecked("show-badge");
+        s.autoOpen = isChecked("auto-open");
+        s.showFilled = isChecked("show-filled");
+        s.campTarget = parseInt($("#gbgcd__camp-target").val() ?? "4");
+
+        localStorage.setItem("gbgcdSettings", JSON.stringify(s));
         GBGCDWindow.updateData();
     }
 
