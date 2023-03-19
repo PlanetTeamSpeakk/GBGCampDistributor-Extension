@@ -86,7 +86,7 @@ const GBGCD = (function () {   // Detach from global scope
                 GBGCD.extId = data;
 
                 // Add window css
-                $("head").append(`<link rel='stylesheet' type='text/css' href='chrome-extension://${data}/css/web/window.css'/>`);
+                $("head").append(`<link rel='stylesheet' type='text/css' href='chrome-extension://${data}/css/window.css'/>`);
                 return;
             default:
                 console.error("[GBGCD] Received unknown message type from extension: " + type);
