@@ -33,8 +33,16 @@ const GBGCD = (function () {   // Detach from global scope
 
         if (!GBGCD.map) return;
 
-        distributeCamps(GBGCD.map, GBGCDWindow.settings.campTarget);
+        // Redistribute the camps if this tile already has more camps
+        // than we bargained for.
+        if (built > GBGCD.map.provinces[GBGCD.map.idToName(province)].desiredCount)
+            GBGCD.redistribute();
+
         GBGCDWindow.updateData();
+
+        // Auto-open window if the user goes to the buildings tab.
+        if (!$("#gbgcd").length)
+            GBGCDWindow.show(true);
     });
 
     // Province ownership changes (province conquered/lost)
@@ -239,7 +247,9 @@ const GBGCD = (function () {   // Detach from global scope
          * Redistributes camps on the map with the given camp target.
          * @param campTarget {number} The amount of camps every province should be supported by.
          */
-        static redistribute(campTarget) {
+        static redistribute(campTarget = undefined) {
+            if (campTarget === undefined) campTarget = GBGCDWindow.settings.campTarget;
+
             distributeCamps(this.map, campTarget);
             GBGCDWindow.updateData();
         }
