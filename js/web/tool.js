@@ -295,6 +295,8 @@ class GBGCDWindow {
 
         localStorage.setItem("gbgcdSettings", JSON.stringify(s));
         GBGCDWindow.updateData();
+
+        $("#gbgcdSettingsBox").remove();
     }
 
     /**
