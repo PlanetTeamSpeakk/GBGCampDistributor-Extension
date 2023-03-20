@@ -11,7 +11,7 @@
 }
 
 #gbgcdBody .h-stack > * {
-    margin: 0 10px;
+    margin: 0 2.5px;
 }
 
 #gbgcdBody .mt-2 {
@@ -20,4 +20,9 @@
 
 #gbgcdBody h4 {
     margin: 10px auto;
+}
+
+#gbgcdBody .visit-first {
+    display: block;
+    margin: 3px;
 }

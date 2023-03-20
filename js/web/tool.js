@@ -33,6 +33,7 @@ class GBGCDWindow {
         });
 
         $("#gbgcdBody")
+            .append($(`<small class="visit-first">For the best results, visit the buildings menu of each province first.</small>`))
             .append($(`<h4 class="text-center">Camps to build:</h4>`))
             .append($(`<table class="foe-table">
                                 <thead>
@@ -67,7 +68,8 @@ class GBGCDWindow {
                     .append($(`<button class="btn btn-default" title="Redistribute the camps across the board">Redistribute</button>`)
                         .on("click", () => GBGCD.redistribute(this.settings.campTarget)))
                     .append($(`<button class="btn btn-default btn-delete" title="Clear all known built camps">Clear built camps</button>`)
-                        .on("click", () => GBGCD.redistribute(this.settings.campTarget)))));
+                        .on("click", () => GBGCD.redistribute(this.settings.campTarget)))))
+            .parent().css({width: "250px"});
         this.updateData();
     }
 
