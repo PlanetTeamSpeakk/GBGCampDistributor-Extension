@@ -6,9 +6,9 @@ and displaying and requesting the data.
 class GBGCDWindow {
     /**
      *
-     * @type {{showFilled: boolean, campTarget: number, showBadge: boolean, autoOpen: boolean}}
+     * @type {{showFilled: boolean, campTarget: number, showBadge: boolean, autoOpen: boolean, sortMethod: number}}
      */
-    static settings = {showFilled: true, campTarget: 4, showBadge: true, autoOpen: true};
+    static settings = {showFilled: true, campTarget: 4, showBadge: true, autoOpen: true, sortMethod: 1};
 
     /**
      * Shows this window. Hides the existing one instead if there is already one open.
@@ -79,11 +79,24 @@ class GBGCDWindow {
 
         table.empty(); // Ensure it's empty when we start.
 
+        // Create a sort method based on the sort method selected by the user.
+        let sm = this.settings.sortMethod;
+        let sortMethod = sm === 0 ? (p1, p2) => p1.name.localeCompare(p2.name) :
+            sm === 1 ? (p1, p2) => p1.id > p2.id ? 1 : p1.id < p2.id ? -1 : 0 :
+                (p1, p2) => {
+                    // If the regions of these two provinces are not the same,
+                    // use whatever value represents
+                    let sortRegion = p1.name.substring(0, 1).localeCompare(p2.name.substring(0, 1));
+                    if (sortRegion !== 0) return sortRegion;
+
+                    return p1.id > p2.id ? 1 : p1.id < p2.id ? -1 : 0;
+                };
+
         let row;
         let count = 0;
         let leftToBuild = 0;
         let totalSaved = 0;
-        for (let province of Object.values(GBGCD.map.provinces)) {
+        for (let province of Object.values(GBGCD.map.provinces).sort(sortMethod)) {
             // Ignore provinces that aren't ours or that don't have to be filled.
             if (!province.ours || province.slotCount === 0) continue;
 
@@ -224,11 +237,45 @@ class GBGCDWindow {
                 .append($(`<label for="gbgcd__camp-target"
                 title="The amount of camps each opposing province should be supported by. 4 by default.">Camp target</label>`)))
 
+            // Sort mode
+            .append($("<p>")
+                .append($(`<div class="dropdown">`)
+                    .append($(`<input type="checkbox" class="dropdown-checkbox" id="gbgcd__sort-toggle">`)) // Required to toggle the dropdown
+                    .append($(`<label class="dropdown-label game-cursor" for="gbgcd__sort-toggle">Sort</label>`))
+                    .append($(`<span class="arrow"></span>`)) // Arrow to display dropdown status
+                    .append($(`
+                        <ul id="gbgcd__sort-dropdown">
+                            <li>
+                                <label>
+                                    <input type="radio" name="sort"/>
+                                    By Name
+                                </label>
+                            </li>
+                            <li>
+                                <label>
+                                    <input type="radio" name="sort"/>
+                                    By Ring
+                                </label>
+                            </li>
+                            <li>
+                                <label>
+                                    <input type="radio" name="sort"/>
+                                    By Region
+                                </label>
+                            </li>
+                        </ul>
+                    `))))
+
             // Save button
             .append($("<p>")
                 .append($("<button class='btn btn-default' style='width: 100%'>")
                     .on("click", this.saveSettings)
                     .text(i18n('Boxes.Settings.Save'))));
+
+        // Set selected sort method
+        $(`#gbgcd__sort-dropdown input:radio[name="sort"]`)
+            .eq(this.settings.sortMethod)
+            .prop("checked", true);
 
         this.updateData();
     }
@@ -241,6 +288,10 @@ class GBGCDWindow {
         s.autoOpen = isChecked("auto-open");
         s.showFilled = isChecked("show-filled");
         s.campTarget = parseInt($("#gbgcd__camp-target").val() ?? "4");
+
+        // Save index of selected sort method radiobutton.
+        let sortBtns = $(`#gbgcd__sort-dropdown input:radio[name="sort"]`);
+        s.sortMethod = sortBtns.index(sortBtns.filter(":checked"));
 
         localStorage.setItem("gbgcdSettings", JSON.stringify(s));
         GBGCDWindow.updateData();
